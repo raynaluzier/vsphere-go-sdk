@@ -10,6 +10,7 @@ import (
 )
 
 func VcenterAuth(user, pass, server string) string {
+	server = AddUrlProtocol(server)  // checks for https:// and adds if missing
 	requestPath := server + "/api/session"
 	request, err := http.NewRequest("POST", requestPath, nil)
 	request.SetBasicAuth(user, pass)
@@ -48,6 +49,23 @@ func VcenterAuth(user, pass, server string) string {
 	return token
 }
 
+func AddUrlProtocol(server string) string {
+	var serverUrl string
+	server = strings.ToLower(server)
+
+	matched, err := regexp.MatchString("https", server)
+	if err != nil {
+		fmt.Println("Error searching for string - ", err)
+	}
+
+	if matched == false {
+		serverUrl = "https://" + server
+		return serverUrl
+	} else {
+		return server
+	}
+}
+
 func TrimUrlProtocol(serverUrl string) string {
 	// Sets server URL to lowercase first then searches
 	var server string
@@ -72,13 +90,13 @@ func TrimUrlProtocol(serverUrl string) string {
 			server = strings.TrimPrefix(serverUrl, "http://")
 			return server
 		} else {
-			fmt.Println("URL protocol http/https not found.")
-			return ""
+			fmt.Println("URL protocol http/https not found. Continuing...")
+			return serverUrl // leaves as is
 		}
 	}
 }
 
-func trimQuotes(s string) string {
+func TrimQuotes(s string) string {
     if len(s) >= 2 {
         if s[0] == '"' && s[len(s)-1] == '"' {
             return s[1 : len(s)-1]

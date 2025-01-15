@@ -17,9 +17,34 @@ import (
 	_ "github.com/vmware/govmomi/view"
 	_ "github.com/vmware/govmomi/vim25/mo"
 )
-func GovmomiLogin(user, pass, server string) (*govmomi.Client, context.Context) {
+
+/*  // Govmomi auth needs to be added to each function; context not available when passed
 	// Creating a connection context
     ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
+
+	// Parsing URL
+	trimServer := common.TrimUrlProtocol(server) // trims off http:// or https:// off of server name
+	sdkUrl := "https://" + user + ":" + pass + "@" + trimServer + ":443/sdk"
+
+	url, err := url.Parse(sdkUrl)  // https://username:password@hostname:443/sdk  @ = %40
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error parsing URL: %s\n", err)
+        os.Exit(1)
+    }
+
+    // Connecting to vCenter
+    client, err := govmomi.NewClient(ctx, url, true)   // shared context, parsed URL, whether client will tolerate an insecure cert
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error connecting to vCenter: %s\n", err)
+        os.Exit(1)
+    }
+*/
+
+
+func GetFolderId(user, pass, server, folderName, datacenterName string) string {
+	//--------------------------------------------------------
+	ctx, cancel := context.WithCancel(context.Background())
     defer cancel()
 
 	// Parsing URL
@@ -38,10 +63,7 @@ func GovmomiLogin(user, pass, server string) (*govmomi.Client, context.Context) 
         fmt.Fprintf(os.Stderr, "Error connecting to vCenter: %s\n", err)
         os.Exit(1)
     }
-	return client, ctx
-}
-
-func GetFolderId(datacenterName, folderName string, client *govmomi.Client, ctx context.Context) string {
+	//--------------------------------------------------------
 	// This is the folder where the VM resides
 	// If root folder, leave folderName blank
 	var folderPath string
@@ -68,10 +90,48 @@ func GetFolderId(datacenterName, folderName string, client *govmomi.Client, ctx 
 	return folderId
 }
 
-func MarkAsTemplate(server, imageName string, client *govmomi.Client, ctx context.Context) (string) {
+func MarkAsTemplate(user, pass, server, imageName, datacenterName string) (string) {
+	//-----------------------------------------------------
+	// Creating a connection context
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	
+	// Parsing URL
+	trimServer := common.TrimUrlProtocol(server) // trims off http:// or https:// off of server name
+	sdkUrl := "https://" + user + ":" + pass + "@" + trimServer + ":443/sdk"
+	
+	url, err := url.Parse(sdkUrl)  // https://username:password@hostname:443/sdk  @ = %40
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error parsing URL: %s\n", err)
+		os.Exit(1)
+	}
+	
+	// Connecting to vCenter
+	client, err := govmomi.NewClient(ctx, url, true)   // shared context, parsed URL, whether client will tolerate an insecure cert
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error connecting to vCenter: %s\n", err)
+		os.Exit(1)
+	}
+	//-----------------------------------------------------
 	var newVmList []*object.VirtualMachine
+	var dc *object.Datacenter
 
 	finder   := find.NewFinder(client.Client, true)
+
+	if datacenterName == "" {
+		dc, err = finder.DefaultDatacenter(ctx)
+		fmt.Println("No datacenter specified. Using default: " + dc.String())
+	} else {
+		dcName := "/" + datacenterName
+		dc, err = finder.Datacenter(ctx, dcName)
+	}
+
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+        os.Exit(1)
+    }
+	finder.SetDatacenter(dc)
+
 	vms, err := finder.VirtualMachineList(ctx, "*")
 	if err != nil {
         fmt.Fprintf(os.Stderr, "Error: %s\n", err)
