@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/raynaluzier/vsphere-go-sdk/util"
-	"github.com/raynaluzier/vsphere-go-sdk/vm"
 )
 
 func main() {
@@ -21,5 +19,4 @@ func main() {
 	//===================================================
 
 
-	fmt.Println(vm.ConvertOvfToVmx())
 }

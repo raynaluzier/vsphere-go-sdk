@@ -8,14 +8,16 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
+	"strings"
 
 	"github.com/raynaluzier/vsphere-go-sdk/common"
 )
 
-func RegisterVm(token, server, dcName, dsName, imageName, folderId string) string {
+func RegisterVm(token, vcServer, dcName, dsName, imageName, folderId string) string {
 	var statusCode string
-	requestPath := "https://" + server + "/api/vcenter/vm?action=register"
+	requestPath := "https://" + vcServer + "/api/vcenter/vm?action=register"
 
 	type Placement struct {
 		Folder       string `json:"folder"`         // required
@@ -31,7 +33,7 @@ func RegisterVm(token, server, dcName, dsName, imageName, folderId string) strin
 	// if trying to use vmtx, get error "A specified parameter was not correct: path"
 	// if trying to use vmdk, import is successful, but there's no network, etc.
 	data := Payload{                                 // Update
-		DatastorePath: "[Work2] ub20pkrt-10031746/ub20pkrt-10031746_2-flat.vmx",  //orig, vmx
+		DatastorePath: "["+ dsName + "] "+ imageName + "/" + imageName + ".vmx",
 		Name: "ub20pkrt-10031746",
 		Placement: Placement{
 			Folder: "group-v4",
@@ -87,23 +89,109 @@ func RegisterVm(token, server, dcName, dsName, imageName, folderId string) strin
 	return statusCode
 }
 
-func ConvertOvfToVmx() string {
-	var cmd *exec.Cmd
 
+// These OVF/OVA conversion functions require the OVFTool be installed
+	// For Windows: 'cmd' and '/c' are not included in the commands, this will fail
+	// Input can be local or URL
+	// Ensure local paths are escaped properly (ex: C:\\lab\\file.vmx)
+func ConvertOvfaToVmx(inputPath, outputPath string) string {
+	var cmd *exec.Cmd
+	var ovaMatched, ovfMatched, vmxMatched bool
+
+	inputPath = strings.ToLower(inputPath)
+	outputPath = strings.ToLower(outputPath)
+	
+	// Ensure input is either an OVA or OVF file
+	ovfMatched, err := regexp.MatchString("ovf", inputPath)
+	if ovfMatched == false {
+		ovaMatched, err = regexp.MatchString("ova", inputPath)
+		if ovaMatched == false {
+			fmt.Println("Error: Input is neither an OVA or OVF file.")
+			fmt.Println("Please provide the full file path to the OVA or OVF that's to be converted.") 
+		}
+	}
+	if err != nil {
+		fmt.Println("Unable to search for OVA/OVF string.")
+	}
+	
+	// Ensure output is a VMX file
+	vmxMatched, err = regexp.MatchString("vmx", outputPath)
+	if vmxMatched == false {
+		fmt.Println("Error: Output does not include a VMX file path.")
+		fmt.Println("Please provide the full destination file path to the resulting VMX file.") 	
+	}
+	if err != nil {
+		fmt.Println("Unable to search for VMX string.")
+	}
+	
+	ovfCmd := "ovftool " + inputPath + " " + outputPath
+
+	fmt.Println("Beginning conversion process... This could take a while.")
 	switch runtime.GOOS{
-	case "windows":  // if you don't put the cmd and /c, it will fail
-		cmd = exec.Command("cmd", "/c", "ovftool --help")
+	case "windows":
+		cmd = exec.Command("cmd", "/c", ovfCmd)
 	default: // mac & linux
-		cmd = exec.Command("ifconfig -a")   // mac "bash"
+		cmd = exec.Command(ovfCmd)   // mac "bash"
 	}
 
 	cmd.Stdout = os.Stdout
 
 	if err := cmd.Run(); err != nil {
-		fmt.Println("could not run command")
+		fmt.Println("Could not run the exec shell command.")
+		// if mac or linux, do we need to prefice cmd with "bash"?
 		return "Failed"
 	} else {
 		return "Success"
 	}
+}
 
+func ConvertVmxToOvfa(inputPath, outputPath string) string {
+	var cmd *exec.Cmd
+	var ovaMatched, ovfMatched, vmxMatched bool
+
+	inputPath = strings.ToLower(inputPath)
+	outputPath = strings.ToLower(inputPath)
+	
+	// Ensure input is a VMX file
+	vmxMatched, err := regexp.MatchString("vmx", inputPath)
+	if vmxMatched == false {
+		fmt.Println("Error: Input does not include a VMX file path.")
+		fmt.Println("Please provide the full file path to the VMX that's to be converted.") 	
+	}
+	if err != nil {
+		fmt.Println("Unable to search for VMX string.")
+	}
+	
+	// Ensure output is either an OVA or OVF file
+	ovfMatched, err = regexp.MatchString("ovf", outputPath)
+	if ovfMatched == false {
+		ovaMatched, err = regexp.MatchString("ova", outputPath)
+		if ovaMatched == false {
+			fmt.Println("Error: Output is neither an OVA or OVF file.")
+			fmt.Println("Please provide the full destination file path to the resulting OVA or OVF file.")
+		}
+	}
+	if err != nil {
+		fmt.Println("Unable to search for OVA/OVF string.")
+	}
+	
+	ovfCmd := "ovftool " + inputPath + " " + outputPath
+
+	fmt.Println("Beginning conversion process... This could take a while.")
+	switch runtime.GOOS{
+	case "windows":
+		cmd = exec.Command("cmd", "/c", ovfCmd)
+	default: // mac & linux
+		cmd = exec.Command(ovfCmd)   // mac "bash"
+	}
+
+	cmd.Stdout = os.Stdout
+
+	if err := cmd.Run(); err != nil {
+		fmt.Println("Could not run the exec shell command.") 
+		// if mac or linux, do we need to prefice cmd with "bash"?
+		return "Failed"
+	} else {
+		return "Success"
+	}
 }

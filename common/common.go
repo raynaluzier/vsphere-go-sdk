@@ -4,9 +4,15 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
+
+	artcommon "github.com/raynaluzier/artifactory-go-sdk/common"
+	"github.com/raynaluzier/vsphere-go-sdk/vm"
 )
 
 func VcenterAuth(user, pass, server string) string {
@@ -103,4 +109,56 @@ func TrimQuotes(s string) string {
         }
     }
     return s
+}
+
+func RenameFile(oldFilePath, newFilePath string) string {
+	// Full path to files
+	err := os.Rename(oldFilePath, newFilePath)
+    if err != nil {
+        log.Fatal(err)
+		return "Failed"
+    } else {
+		return "Success"
+	}
+}
+
+func GetFileType(filePath string) string {
+	filePath = strings.ToLower(filePath)
+
+	ext := filepath.Ext(filePath)
+	return ext
+}
+
+func CheckFileConvert(outputDir, downloadUri string) string {
+	// Takes output directory and download URI, parses the image name from the download URI and determines 
+	// the source file path
+	// File type is checked; if OVA/OVF, it's converted to VMX. If VMTX, it's converted to VMX
+	var result string
+	var sourcePath, newPath string
+	fileName := artcommon.ParseUriForFilename(downloadUri)
+	imageName := artcommon.ParseFilenameForImageName(fileName)
+	sourcePath = outputDir + "/" + fileName // CHECK FOR SLASH IN OUTPUT DIR
+	newPath    = outputDir + "/" + imageName + ".vmx"
+
+	fileType := GetFileType(fileName)
+
+	switch fileType {
+	case "ova":
+		fmt.Println("File type found: " + fileType + "; converting to vmx...")
+		result = vm.ConvertOvfaToVmx(sourcePath, newPath)
+	case "ovf":
+		fmt.Println("File type found: " + fileType + "; converting to vmx...")
+		result = vm.ConvertOvfaToVmx(sourcePath, newPath)
+	case "vmtx":
+		fmt.Println("File type found: " + fileType + "; converting to vmx...")
+		result = RenameFile(sourcePath, newPath)
+	case "vmx":
+		fmt.Println("File is already in needed format: vmx.")
+		result = "Success"
+	default:
+		log.Fatal("Found unsupported file type: " + fileType)
+		log.Fatal("Supported file types are: ova, ovf, vmtx, and vmx")
+		result = "Failed"
+	}
+	return result
 }
