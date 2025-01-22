@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -15,7 +16,42 @@ import (
 	"github.com/raynaluzier/vsphere-go-sdk/common"
 )
 
-func RegisterVm(token, vcServer, dcName, dsName, imageName, folderId string) string {
+func CheckFileConvert(outputDir, downloadUri string) string {
+	// Takes output directory and download URI, parses the image name from the download URI and determines 
+	// the source file path
+	// File type is checked; if OVA/OVF, it's converted to VMX. If VMTX, it's converted to VMX
+	var result string
+	var sourcePath, newPath string
+	outputDir  = common.CheckAddSlashToPath(outputDir)
+	fileName  := common.ParseUriForFilename(downloadUri)
+	imageName := common.ParseFilenameForImageName(fileName)
+	sourcePath = outputDir + fileName
+	newPath    = outputDir + imageName + ".vmx"
+
+	fileType := common.GetFileType(fileName)
+
+	switch fileType {
+	case "ova":
+		fmt.Println("File type found: " + fileType + "; converting to vmx...")
+		result = ConvertOvfaToVmx(sourcePath, newPath)
+	case "ovf":
+		fmt.Println("File type found: " + fileType + "; converting to vmx...")
+		result = ConvertOvfaToVmx(sourcePath, newPath)
+	case "vmtx":
+		fmt.Println("File type found: " + fileType + "; converting to vmx...")
+		result = common.RenameFile(sourcePath, newPath)
+	case "vmx":
+		fmt.Println("File is already in needed format: vmx.")
+		result = "Success"
+	default:
+		log.Fatal("Found unsupported file type: " + fileType)
+		log.Fatal("Supported file types are: ova, ovf, vmtx, and vmx")
+		result = "Failed"
+	}
+	return result
+}
+
+func RegisterVm(token, vcServer, dcName, dsName, imageName, folderId, resPoolId string) string {
 	var statusCode string
 	requestPath := "https://" + vcServer + "/api/vcenter/vm?action=register"
 
@@ -32,33 +68,32 @@ func RegisterVm(token, vcServer, dcName, dsName, imageName, folderId string) str
 
 	// if trying to use vmtx, get error "A specified parameter was not correct: path"
 	// if trying to use vmdk, import is successful, but there's no network, etc.
-	data := Payload{                                 // Update
+	data := Payload{ 
 		DatastorePath: "["+ dsName + "] "+ imageName + "/" + imageName + ".vmx",
-		Name: "ub20pkrt-10031746",
+		Name: imageName,
 		Placement: Placement{
-			Folder: "group-v4",
-			ResourcePool: "resgroup-9",
+			Folder: folderId,
+			ResourcePool: resPoolId,
 		},
 	}
 
 	payloadBytes, err := json.Marshal(data)
 
 	if err != nil {
-		fmt.Println("Error1")							// Update
+		fmt.Println("Error: Unable to marshal json data - ", err)
 	}
 	body := bytes.NewReader(payloadBytes)
 
 	req, err := http.NewRequest(http.MethodPost, requestPath, body)
 	if err != nil {
-		fmt.Println("Error2")							// Update
+		fmt.Println("Error: Error making HTTP POST request - ", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	newToken := common.TrimQuotes(token)
+	newToken := common.TrimQuotes(token) // Required or auth will fail
 	req.Header.Set("vmware-api-session-id", newToken)
 	
-	v1 := req.Header.Get("vmware-api-session-id")
-	fmt.Println(v1)
-
+	//v1 := req.Header.Get("vmware-api-session-id")
+	//fmt.Println(v1)
 
 	defaultTransport := http.DefaultTransport.(*http.Transport)
 	customTransport := &http.Transport{
@@ -73,24 +108,24 @@ func RegisterVm(token, vcServer, dcName, dsName, imageName, folderId string) str
 
 	client := &http.Client{Transport: customTransport}
 	resp, err := client.Do(req)
-	fmt.Println(resp)
+	//fmt.Println(resp)
 
 	if err != nil {
-		fmt.Println("Error3")
+		fmt.Println("Error registering VMX with vCenter - ", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 200 {   // print actual status code
+	if resp.StatusCode == 200 {
 		statusCode = "200"
 	} else {
-		statusCode = "400"
+		statusCode = (fmt.Sprintf("%v", resp.StatusCode))           // Test this
 	}
-	fmt.Println(statusCode)
+	//fmt.Println(statusCode)
 	return statusCode
 }
 
-
 // These OVF/OVA conversion functions require the OVFTool be installed
+	// Converts OVF/OVA to VMX
 	// For Windows: 'cmd' and '/c' are not included in the commands, this will fail
 	// Input can be local or URL
 	// Ensure local paths are escaped properly (ex: C:\\lab\\file.vmx)

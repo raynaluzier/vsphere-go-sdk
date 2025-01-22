@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
 
-	artcommon "github.com/raynaluzier/artifactory-go-sdk/common"
-	"github.com/raynaluzier/vsphere-go-sdk/vm"
+	"github.com/raynaluzier/vsphere-go-sdk/util"
 )
+
+var logLevel slog.Level
 
 func VcenterAuth(user, pass, server string) string {
 	server = AddUrlProtocol(server)  // checks for https:// and adds if missing
@@ -96,7 +99,7 @@ func TrimUrlProtocol(serverUrl string) string {
 			server = strings.TrimPrefix(serverUrl, "http://")
 			return server
 		} else {
-			fmt.Println("URL protocol http/https not found. Continuing...")
+			//fmt.Println("URL protocol http/https not found. Continuing...")
 			return serverUrl // leaves as is
 		}
 	}
@@ -129,36 +132,84 @@ func GetFileType(filePath string) string {
 	return ext
 }
 
-func CheckFileConvert(outputDir, downloadUri string) string {
-	// Takes output directory and download URI, parses the image name from the download URI and determines 
-	// the source file path
-	// File type is checked; if OVA/OVF, it's converted to VMX. If VMTX, it's converted to VMX
-	var result string
-	var sourcePath, newPath string
-	fileName := artcommon.ParseUriForFilename(downloadUri)
-	imageName := artcommon.ParseFilenameForImageName(fileName)
-	sourcePath = outputDir + "/" + fileName // CHECK FOR SLASH IN OUTPUT DIR
-	newPath    = outputDir + "/" + imageName + ".vmx"
-
-	fileType := GetFileType(fileName)
-
-	switch fileType {
-	case "ova":
-		fmt.Println("File type found: " + fileType + "; converting to vmx...")
-		result = vm.ConvertOvfaToVmx(sourcePath, newPath)
-	case "ovf":
-		fmt.Println("File type found: " + fileType + "; converting to vmx...")
-		result = vm.ConvertOvfaToVmx(sourcePath, newPath)
-	case "vmtx":
-		fmt.Println("File type found: " + fileType + "; converting to vmx...")
-		result = RenameFile(sourcePath, newPath)
-	case "vmx":
-		fmt.Println("File is already in needed format: vmx.")
-		result = "Success"
-	default:
-		log.Fatal("Found unsupported file type: " + fileType)
-		log.Fatal("Supported file types are: ova, ovf, vmtx, and vmx")
-		result = "Failed"
-	}
-	return result
+func ParseUriForFilename(artifactUri string) string {
+	// This can be the download or artifact URI
+	fileName := path.Base(artifactUri)
+	return fileName
 }
+
+func ParseFilenameForImageName(fileName string) string {
+	ext := filepath.Ext(fileName)
+	imageName := strings.TrimSuffix(fileName, ext)
+	return imageName
+}
+
+func CheckPathType(path string) bool {
+	// Checks path to see if path is Unix-based (has '/') or Windows-based (has '\')
+	isWinPath := strings.Contains(path, "\\")
+	return isWinPath
+}
+
+func CheckAddSlashToPath(path string) string {
+	lastChar := path[len(path)-1:]
+	winPath := CheckPathType(path)
+
+	if winPath == true {
+		if lastChar == "\\" {
+			LogTxtHandler().Debug("Path: '" + path + "' is formatted properly")
+			return path
+		} else {
+			// Add backslash to path
+			path = path + "\\"
+			return path
+		}
+	} else {  // Unix Path
+		if lastChar == "/" {
+			LogTxtHandler().Debug("Path: '" + path + "' is formatted properly")
+			return path
+		} else {
+			// Add forwardslash to path
+			path = path + "/"
+			return path
+		}
+	}
+}
+
+func SetLoggingLevel() slog.Level {
+	level := util.Logging
+
+	switch level {
+	case "INFO":
+		logLevel = slog.LevelInfo
+	case "WARN":
+		logLevel = slog.LevelWarn
+	case "ERROR":
+		logLevel = slog.LevelError
+	case "DEBUG":
+		logLevel = slog.LevelDebug
+	default:
+		logLevel = slog.LevelInfo
+	}
+	return logLevel
+}
+
+func LogTxtHandler() *slog.Logger {
+	loggingLevel := SetLoggingLevel()
+	opts := &slog.HandlerOptions{
+		Level: slog.Level(loggingLevel),
+	}
+	handler   := slog.NewTextHandler(os.Stdout, opts)
+	txtLogger := slog.New(handler)
+	return txtLogger
+}
+
+func LogJsonHandler() *slog.Logger {
+	loggingLevel := SetLoggingLevel()
+	opts := &slog.HandlerOptions{
+		Level: slog.Level(loggingLevel),
+	}
+	handler := slog.NewJSONHandler(os.Stdout, opts)
+	jsonLogger := slog.New(handler)
+	return jsonLogger
+}
+

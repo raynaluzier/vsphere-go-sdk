@@ -41,8 +41,62 @@ import (
     }
 */
 
+func GetResPoolId(user, pass, server, resPoolName, datacenterName, clusterName string) (string, error) {
+	//--------------------------------------------------------
+	ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
 
-func GetFolderId(user, pass, server, folderName, datacenterName string) string {
+	// Parsing URL
+	trimServer := common.TrimUrlProtocol(server) // trims off http:// or https:// off of server name
+	sdkUrl := "https://" + user + ":" + pass + "@" + trimServer + ":443/sdk"
+
+	url, err := url.Parse(sdkUrl)  // https://username:password@hostname:443/sdk  @ = %40
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error parsing URL: %s\n", err)
+        os.Exit(1)
+    }
+ 
+    // Connecting to vCenter
+    client, err := govmomi.NewClient(ctx, url, true)   // shared context, parsed URL, whether client will tolerate an insecure cert
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error connecting to vCenter: %s\n", err)
+        os.Exit(1)
+    }
+	//--------------------------------------------------------
+	var resPoolPath string
+	var resPool *object.ResourcePool
+
+	finder   := find.NewFinder(client.Client, true)
+
+	if resPoolName == "" && clusterName == "" {
+		resPool, err = finder.DefaultResourcePool(ctx)
+	} else if resPoolName != "" && clusterName != "" {
+		resPoolPath = "/" + datacenterName + "/host/" + clusterName + "/Resources/" + resPoolName
+		resPool, err = finder.ResourcePool(ctx, resPoolPath)
+	} else if resPoolName == "" && clusterName != "" {
+		resPoolPath = "/" + datacenterName + "/host/" + clusterName + "/Resources"
+		resPool, err = finder.ResourcePool(ctx, resPoolPath)
+	} else {
+		fmt.Println("Not enough information provided to find a specific resource pool.")
+		fmt.Println("Using the default resource pool...")
+		resPool, err = finder.DefaultResourcePool(ctx)
+	}
+	if err != nil {
+        fmt.Fprintf(os.Stderr, "Error getting resource pool ID: %s\n", err)
+        os.Exit(1)
+	}
+
+	strResPool := resPool.String()
+	_, after, _ := strings.Cut(strResPool, ":")					// Returns: 'group-v10 @ /Lab/vm'
+	pathAfter := after
+	before, _, _ := strings.Cut(pathAfter, "@")					// Returns: 'group-v10 '
+	resPoolId := before
+	resPoolId = strings.TrimSuffix(resPoolId, " ")				// Returns: 'group-v10'
+	fmt.Println("Resource Pool ID: ", resPoolId)
+	return resPoolId, err
+}
+
+func GetFolderId(user, pass, server, folderName, datacenterName string) (string, error) {
 	//--------------------------------------------------------
 	ctx, cancel := context.WithCancel(context.Background())
     defer cancel()
@@ -86,8 +140,8 @@ func GetFolderId(user, pass, server, folderName, datacenterName string) string {
 	before, _, _ := strings.Cut(pathAfter, "@")					// Returns: 'group-v10 '
 	folderId := before
 	folderId = strings.TrimSuffix(folderId, " ")				// Returns: 'group-v10'
-	fmt.Println(folderId)
-	return folderId
+	fmt.Println("Folder ID: ", folderId)
+	return folderId, err
 }
 
 func MarkAsTemplate(user, pass, server, imageName, datacenterName string) (string) {
