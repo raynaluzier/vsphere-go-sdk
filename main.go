@@ -1,11 +1,12 @@
 package main
 
 import (
-	"fmt"
+	_ "fmt"
 	"os"
 
-	"github.com/raynaluzier/vsphere-go-sdk/common"
+	_ "github.com/raynaluzier/vsphere-go-sdk/common"
 	"github.com/raynaluzier/vsphere-go-sdk/util"
+	//"golang.org/x/crypto/ssh" // go get golang.org/x/crypto/ssh
 )
 
 func main() {
@@ -17,7 +18,7 @@ func main() {
 	//folderName := os.Getenv("VCENTER_FOLDER")
 	//resPoolName := os.Getenv("VCENTER_RESOURCE_POOL")
 	//clusterName := os.Getenv("VCENTER_CLUSTER")
-	imageName := os.Getenv("IMAGE_NAME")
+	//imageName := os.Getenv("IMAGE_NAME")
 
 	//logLevel 	:= os.Getenv("LOGGING")
 	outputDir 	:= os.Getenv("OUTPUTDIR")
@@ -28,14 +29,7 @@ func main() {
 	//util.Logging   = logLevel
 	util.OutputDir = outputDir
 	//===================================================
-	outputDir = "E:\\ub20pkrt-10031746\\"
-	sourcePath := outputDir + imageName + ".vmtx"
-	newPath    := outputDir + imageName + ".vmx"
 
-	//result := vm.CheckFileConvert(outputDir, downloadUri)
-	fmt.Println(common.RenameFile(sourcePath, newPath))
 
-	//if result == "Success" {
-	//	fmt.Println(tasks.ImportVm(vcUser, vcPass, vCenter, dcName, dsName, imageName, folderName, resPoolName, clusterName))
-	//}
+	
 }

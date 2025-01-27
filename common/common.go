@@ -212,4 +212,3 @@ func LogJsonHandler() *slog.Logger {
 	jsonLogger := slog.New(handler)
 	return jsonLogger
 }
-
