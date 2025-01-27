@@ -23,7 +23,7 @@ func main() {
 	//logLevel 	:= os.Getenv("LOGGING")
 	outputDir 	:= os.Getenv("OUTPUTDIR")
 
-	util.VcenterServer = vCenter
+	util.VcServer = vCenter
 	util.VcUser = vcUser
 	util.VcPassword = vcPass
 	//util.Logging   = logLevel
