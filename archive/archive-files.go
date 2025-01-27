@@ -12,20 +12,6 @@ import (
 )
 
 /*
-authInput := make(map[string]string)
-authInput["method"] = "private_key"
-authInput["user"] = "rt-user"
-authInput["server"] = "192.168.1.xxx"
-authInput["port"] = "22"
-authInput["private_key_file"] = "C:\\Users\\me\\.ssh\\id_ecdsa"
-*/
-
-/*
-authInput["method"] = "user_pass"
-authInput["user"] = "domain.local\\someuser"
-authInput["pass"] = "xyz123abc"
-authInput["port"] = "22"
-authInput["server"] = "192.168.1.xxx"
 
 // Create copy list
 imageName := "image1111"
@@ -295,3 +281,6 @@ func WinCopyFiles(sourceDir, targetDir string, copyList []string, client *sshcli
 	defer client.Close()
 	return "End of Copy Process"
 }
+
+// Placeholder should we choose to pursue this functionality later
+func LinuxCopyFiles() () {}

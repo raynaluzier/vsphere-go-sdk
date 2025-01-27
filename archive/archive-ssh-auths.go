@@ -18,6 +18,23 @@ auth = {
 	//private_key_file
 }*/
 
+/*
+authInput := make(map[string]string)
+authInput["method"] = "private_key"
+authInput["user"] = "rt-user"
+authInput["server"] = "192.168.1.xxx"
+authInput["port"] = "22"
+authInput["private_key_file"] = "C:\\Users\\me\\.ssh\\id_ecdsa"
+*/
+
+/*
+authInput["method"] = "user_pass"
+authInput["user"] = "domain.local\\someuser"
+authInput["pass"] = "xyz123abc"
+authInput["port"] = "22"
+authInput["server"] = "192.168.1.xxx"
+*/
+
 var client *sshclient.Client
 
 func GetAuthClient(authInput map[string]string) (*sshclient.Client) {
@@ -80,6 +97,21 @@ func AuthPrivateKey(server, port, user, privKeyFile string) (*sshclient.Client) 
 	if err != nil {
 		strErr := fmt.Sprintf("%v\n", err)
 		common.LogTxtHandler().Error("Error authenticating with private key file - " + strErr)
+	} else {
+		strClient := fmt.Sprintf("%v\n", err)
+		common.LogTxtHandler().Debug(strClient)
+	}
+	
+	return client
+}
+
+// NOTE ---> verified key has pass, but get error: "ssh: key is not password protected"
+func AuthPrivateKeyPhrase(server, port, user, privKeyFile, passphrase string) (*sshclient.Client) {
+	sshServer := server + ":" + port
+	client, err := sshclient.DialWithKeyWithPassphrase(sshServer, user, privKeyFile, passphrase)
+	if err != nil {
+		strErr := fmt.Sprintf("%v\n", err)
+		common.LogTxtHandler().Error("Error authenticating with private key file and passphrase - " + strErr)
 	} else {
 		strClient := fmt.Sprintf("%v\n", err)
 		common.LogTxtHandler().Debug(strClient)
