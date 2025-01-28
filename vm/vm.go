@@ -19,7 +19,7 @@ import (
 func CheckFileConvert(outputDir, downloadUri string) string {
 	// Takes output directory and download URI, parses the image name from the download URI and determines 
 	// the source file path
-	// File type is checked; if OVA/OVF, it's converted to VMX. If VMTX, it's converted to VMX
+	// File type is checked; if OVA/OVF, it's converted to VMX. If VMTX, it's renamed to VMX.
 	var result string
 	var sourcePath, newPath string
 	outputDir  = common.CheckAddSlashToPath(outputDir)

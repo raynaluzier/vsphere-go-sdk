@@ -42,6 +42,8 @@ import (
 */
 
 func GetResPoolId(user, pass, server, resPoolName, datacenterName, clusterName string) (string, error) {
+	// If resPoolName and clusterName are left blank, the default resource pool will be used, which it will also default to if there's
+	// not enough info to find the named resource pool
 	//--------------------------------------------------------
 	ctx, cancel := context.WithCancel(context.Background())
     defer cancel()
