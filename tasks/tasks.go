@@ -9,9 +9,9 @@ import (
 	"github.com/raynaluzier/vsphere-go-sdk/vm"
 )
 
-// download happens from artifactory sdk, called from plugin
+// Download to datastore happens from artifactory sdk, called from plugin
 // Check file type and conversion/rename happens in vsphere sdk, called from plugin
-// true/false + copy to datastore happens in vsphere sdk, called from plugin
+// RegisterVm and convert to template happens in vsphere sdk, called from plugin
 
 func ImportVm(vcUser, vcPass, vcServer, dcName, dsName, imageName, folderName, resPoolName, clusterName string) string {
 	token := common.VcenterAuth(vcUser, vcPass, vcServer)

@@ -37,7 +37,7 @@ This function is used in support of the `RegisterVm` function to gather the nece
 | user           | Username of the vCenter account that will be performing the operations (ex: jdoe@domain.com)  | string   | TRUE     |
 | pass           | Password for the provided vCenter account                                                     | string   | TRUE     |
 | server         | FQDN or IP address of the target vCenter server                                               | string   | TRUE     |
-| folderName     | Target resource pool name where the template will be imported                                 | string   | TRUE     |
+| folderName     | Target folder name where the template will be imported                                        | string   | TRUE     |
 | datacenterName | Target datacenter name where the template will be imported                                    | string   | TRUE     |
 
 #### Outputs
