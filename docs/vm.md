@@ -42,7 +42,7 @@ This function is used in conjunction with the `MarkAsTemplate` function.
 
 Takes in the path (inputPath) to the OVA or OVF file to be converted and the output path where the resulting VMX and associated files should be placed. The input can be a local path or URL.
 
-Ensure local paths are escaped properly (ex: C:\\lab\\file.vmx).
+Ensure local paths are escaped properly (ex: 'C:\\\lab\\\file.vmx').
 
 ** Note: If conversion process is being executed on a Windows-based machine, "cmd" and "/c" must be included in the list of command or the process will fail. 
 
