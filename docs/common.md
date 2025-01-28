@@ -11,9 +11,9 @@ Takes in the credential and server information for a vCenter account with the ad
 | server  | FQDN or IP address of the target vCenter server                                               | string  | TRUE     |
 
 #### Outputs
-| Name   | Description                                                                                    | Type     |
-|--------|------------------------------------------------------------------------------------------------|----------|
-| token  | Return result from the vCenter authentication request; used to authorize subsequent API calls  | string   |
+| Name   | Description                                                                                               | Type     |
+|--------|-----------------------------------------------------------------------------------------------------------|----------|
+| token  | Token resulting from a successful vCenter authentication request; used to authorize subsequent API calls  | string   |
 
 
 ## AddUrlProtocol
@@ -47,7 +47,7 @@ Checks for and if exists, trims off 'http://' or 'https://' from the URL to get 
 
 
 ## TrimQuotes
-This function removes the inherent quotes from the string and returns the result. This required when passing the vCenter `vmware-api-session-id` token in subsequent vSphere API calls otherwise the call will fail.
+This function removes the inherent quotes from the string and returns the result. This is required when passing the vCenter `vmware-api-session-id` token in subsequent vSphere API calls otherwise the call will fail.
 
 #### Inputs
 | Name | Description                                 | Type    | Required |
@@ -61,7 +61,7 @@ This function removes the inherent quotes from the string and returns the result
 
 
 ## Rename File
-Takes in the full path to the file and renames it to the new file path. This function supports renaming a VMTX file (VM Template) to VMX file (virtual machine) so that it can be imported into vCenter before we convert it back to a template.
+Takes in the full path to the file and renames it to the new file path. This function supports renaming a VMTX file (VM Template) to VMX file (virtual machine) so that it can be imported into vCenter before we convert it back to a template. (We can only import VMX files.)
 
 #### Inputs
 | Name         | Description                                   | Type     | Required |
@@ -78,7 +78,7 @@ Takes in the full path to the file and renames it to the new file path. This fun
 ## GetFileType
 Takes in the path to a file and extracts the file extension. The file extension is then returned. 
 
-This supports the `CheckFileConvert` function which uses an image's primary Artifactory download URI to determine the image type and then converts it to a VMX as appropriate in prep to import it into vCenter.
+This supports the `CheckFileConvert` function which uses an image's primary Artifactory download URI to determine the image type and then converts it to a VMX as appropriate in prep to import it into vCenter. The download URI used should end with OVA, OVF, or VMTX.
 
 #### Inputs
 | Name      | Description                                                                          | Type    | Required |
@@ -130,7 +130,7 @@ Checks the provided path to see if it's Unix-based (has '/') or Windows-based (h
 #### Outputs
 | Name       | Description                                        | Type |
 |------------|----------------------------------------------------|------|
-| isWinPath | Returns true of the provided path is Windows-based  | bool |
+| isWinPath  | Returns true of the provided path is Windows-based | bool |
 
 
 ## CheckAddSlashToPath

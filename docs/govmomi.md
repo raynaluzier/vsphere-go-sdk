@@ -3,11 +3,10 @@ Govmomi-based authentication needs to be added to each Govmomi-based function be
 
 A commented-out copy of the authentication piece is available at the top of the Govmomi package for reference.
 
-
 ## GetResPoolId
 A vSphere resource pool ID is required when importing the VMX into vCenter before marking it as a template, even if just the default resource pool is used. If `resPoolName` and `clusterName` are left blank (""), the default resource pool will be used. If not enough information is provided to properly derive the resource pool ID, then the default resource pool will be used instead.
 
-This function is used in support of the `RegisterVm` function to gather the necessary information to pass into payload.
+This function is used in support of the `RegisterVm` function to gather the necessary information to build the request payload.
 
 #### Inputs
 | Name           | Description                                                                                   | Type     | Required |
@@ -29,7 +28,7 @@ This function is used in support of the `RegisterVm` function to gather the nece
 ## GetFolderId
 A vSphere folder ID is required when importing the VMX into vCenter before marking it as a template, even if just the root folder is used. If `folderName` is left blank (""), the root folder will be used instead. 
 
-This function is used in support of the `RegisterVm` function to gather the necessary information to pass into payload.
+This function is used in support of the `RegisterVm` function to gather the necessary information to build the request payload.
 
 #### Inputs
 | Name           | Description                                                                                   | Type     | Required |
@@ -48,9 +47,9 @@ This function is used in support of the `RegisterVm` function to gather the nece
 
 
 ## MarkAsTemplate
-Takes in the vCenter credential information, image name (which is used to find the virtual machine - i.e. the VMX that we converted the image to), and the datacenter where the virtual machine (VMX) resides and marks the VM as a VM template (VMTX). 
+Takes in the vCenter credential information, image name (which is used to find the virtual machine - i.e. the VMX that we converted the image to), and the datacenter where the virtual machine (VMX) resides, and then marks the VM as a VM template (VMTX). 
 
-For instances where the image that was downloaded originated as a VMTX, and then was renamed to VMX before the RegisterVm function, this process is required because we cannot import a VMTX file. It has to be a VMX file and THEN we can convert it back to a VM template (VMTX).
+For instances where the image that was downloaded originated as a VMTX, and then was renamed to VMX before the RegisterVm function, this process is required because we cannot import a VMTX file. It has to be a VMX file for the import and THEN we can convert it back to a VM template (VMTX).
 
 #### Inputs
 | Name           | Description                                                                                   | Type     | Required |

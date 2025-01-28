@@ -2,7 +2,9 @@
 As described previously, these functions are intended to be used with a custom Packer plugin, but can be called independently if desired.
 
 ## ImportVm
+Takes in the information about the target vCenter environment and placement, and builds the JSON payload for the API call. The credential information is used to first authenticate to vCenter via the `VcenterAuth` function and gets the needed token (which is stripped of its surrounding quotes). Next, the vSphere ID of the target folder is found using the `GetFolderId` function, and then the vSphere ID of the target resource pool is found using the `GetResPoolId` function.
 
+If successful, the vCenter information along with the authentication token is passed to the `RegisterVm` function to convert the image file to VMX, register it with vCenter, and then mark it as a VM Template.
 
 #### Inputs
 | Name        | Description                                                                              | Type     | Required |

@@ -16,7 +16,7 @@ To run functions from this module, the following pre-requisites must be met:
 
 5. Populating the Global Variables (see: `/util/util.go`): **VcServer**, **VcUser**, **VcPassword**, **OutputDir**, and optionally, **Logging**. This can be done when calling a function in the `tasks` package (e.g. as part of a plugin operation), by configuring the `.env` file, or statically (only recommended for testing).
 
-Using .env File: Configure the `.env` file with vCenter credentials, vCenter server, and then the Output Directory is used for downloading the image file(s) to ensure they're placed in the desired datastore location. Logging provides an option to change the level of logging to display. Logging provides an option to change the level of logging to display.
+Using .env File: Configure the `.env` file with vCenter credentials, vCenter server, and then the Output Directory is used for downloading the image file(s) to ensure they're placed in the desired datastore location. Logging provides an option to change the level of logging to display.
 
     * `VCENTER_SERVER`   - vCenter Server   --> Ex: VCENTER_SERVER=vc01.domain.com
     * `VCENTER_USER`     - vCenter User     --> Ex: VCENTER_USER=admin@domain.com
@@ -27,13 +27,13 @@ Using .env File: Configure the `.env` file with vCenter credentials, vCenter ser
 Then use `os.Getenv` to set `util.VcServer`, `util.VcUser`, `util.VcPasword`, `util.OutputDir`, and `util.Logging` respectively.
 
 ## About
-This SDK is broken into several packages: `common`, `govmomi`, `vm`, `tasks`, and `util` based on the underlying behavior of the functions. Some functions are specifically related to certain behaviors so they have been grouped together into packages as described below.
+This SDK is broken into several packages: `common`, `govmomi`, `vm`, `tasks`, and `util` based on the underlying behavior of the functions. Some functions are specifically related to certain behaviors or package sources so they have been grouped together into functional packages as described below.
 
 ### Common
 These functions perform small, generalized supporting tasks for the other focused modules. These functions can be found under the `common.go` file.
 
 ### Govmomi
-These functions make use of the [Govmomi](https://github.com/vmware/govmomi) package to establish an authentication client and using that client to gather specific vCenter resource information that is required to perform other functions and tasks.
+These functions make use of the [Govmomi](https://github.com/vmware/govmomi) package to establish an authentication client and use that client to gather specific vCenter resource information that is required to perform other functions and tasks in vCenter.
 
 ### Tasks
 These functions are larger operations that first set the global variables, and then make a series of function calls to perform specific activities. While they can be called independently, they were created in support of a custom Packer plugin to streamline passing environment-specific variables, such as the vCenter credentials, server, logging, and output directory. Rather than passing one or more of these to every function in the SDK (in addition to the required inputs), they are passed in ONCE to the desired function, the global variables are set, and then they are used automatically when calling each sub-function without having to pass them in over and over.
@@ -44,19 +44,19 @@ These larger tasks also group the targeted functions of a desired behavior into 
 This is a list of the global variables used within this SDK. As with any Go package, they can be used by importing the `util` package path and then referencing them as `util.Token`, `util.ServerApi`, etc.
 
 ### VM
-These functions are related to VM-related operations such as converting from OVA/OVF to VMX, converting VMX to OVA/OVF, registering a VM in vCenter (we may also refer to this as 'importing'), and checking the image's file type from the primary download URI (from Artifactory) provided and either converting it or renaming it in preparation for importing into vCenter.
+These functions are related to VM-related operations such as converting from OVA/OVF to VMX, converting VMX to OVA/OVF, registering a VM in vCenter (we also refer to this as 'importing' within this SDK), and checking the image's file type from the primary download URI (from Artifactory) provided, and either converting it or renaming it in preparation for importing into vCenter.
 
 ### Archive
 Archive also exists as a package, but it's really just a place to hold potentially useful functions that were created but have no immediate use. Artifacts are split into archive files that match their associated behaviors; as of now, either the `archive-ssh-auths.go` or `archive-files.go` files. 
 
-The `archive-ssh-auths.go` file contains functions that are perform different types of authentication methods. The original intention was to include an option to authenticate between systems and copy a list of files (based on image type) over to a datastore prior to image import into vCenter. This has been tabled in favor of using a pre-created share on the target datastore as the output directory when downloading images. 
+The `archive-ssh-auths.go` file contains functions that perform different types of authentication methods. The original intention was to include an option to authenticate between systems and copy a list of files (based on image type) over to a datastore prior to image import into vCenter. This has been tabled in favor of using a pre-created share on the target datastore as the output directory when downloading images. Not only is the handling simpler, but the files are in place at time of download, rather than downloading AND THEN additional time spent waiting for them to copy elsewhere.
 
-The `archive-files.go` file contains functions related to file copy operations related to images, including making a list images files to copy, a Windows-based copy function, a placeholder for a Linux-based copy function, and a test SSH function that was used for script development. These were intended to be used with the SSH authentication functions and thus tabled in favor of the pre-created shared.
+The `archive-files.go` file contains functions related to file copy operations related to images, including making a list images files to copy, a Windows-based copy function, a placeholder for a Linux-based copy function, and a test SSH function that was used for script development. These were intended to be used with the SSH authentication functions and thus tabled in favor of the pre-created share mentioned above.
 
 ## Function Reference
 A reference outline of each function's behavior and any special notes can be found in the corresponding documents below.
 
 - [Common](https://github.com/raynaluzier/vsphere-go-sdk/blob/main/docs/common.md)
 - [Govmomi](https://github.com/raynaluzier/vsphere-go-sdk/blob/main/docs/govmomi.md)
-- [Tasks](https://github.com/raynaluzier/vsphere-go-sdk/blob/main/tasks/tasks.go)
+- [Tasks](https://github.com/raynaluzier/vsphere-go-sdk/blob/main/docs/tasks.md)
 - [VM](https://github.com/raynaluzier/vsphere-go-sdk/blob/main/docs/vm.md)

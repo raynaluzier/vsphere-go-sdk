@@ -1,12 +1,12 @@
 # VM Functions
 
 ## CheckFileConvert
-Takes the provided output directory (datastore location) and download URI for the primary image file (OVA, OVF, or VMTX), parses the image name from the download URI and determines the source file path. The file type is checked and depending on whether it's OVA, OVF, or VMTX, it's converted to a VMX as appropriate. This is in preparation for imported the file into vCenter and marking it as a VM Template.
+Takes the provided output directory (datastore location) and download URI for the primary image file (OVA, OVF, or VMTX), parses the image name from the download URI, and determines the source file path. The file type is checked and depending on whether it's OVA, OVF, or VMTX, it's converted to a VMX as appropriate. This is in preparation for importing the template (as a virtual machine) into vCenter and marking it as a VM Template.
 
 #### Inputs
 | Name         | Description                                                                  | Type     | Required |
 |--------------|------------------------------------------------------------------------------|----------|:--------:|
-| outputDir    | Connected datastore location where downloaded image files reside             | string   | TRUE     |
+| outputDir    | Connected datastore location where the downloaded image files reside         | string   | TRUE     |
 | downloadUri  | Download URI for the primary image file (OVA, OVF, or VMTX) from Artifactory | string   | TRUE     |
 
 #### Outputs
@@ -38,14 +38,11 @@ This function is used in conjunction with the `MarkAsTemplate` function.
 
 
 ## ConvertOvfaToVmx
-** Requires the OVFTool be installed on the machine who's executing the conversion commands. **
+**Requires the OVFTool be installed on the machine that's executing the conversion commands.**
 
 Takes in the path (inputPath) to the OVA or OVF file to be converted and the output path where the resulting VMX and associated files should be placed. The input can be a local path or URL.
 
 Ensure local paths are escaped properly (ex: 'C:\\\lab\\\file.vmx').
-
-** Note: If conversion process is being executed on a Windows-based machine, "cmd" and "/c" must be included in the list of command or the process will fail. 
-
 
 #### Inputs
 | Name       | Description                                                                     | Type     | Required |
@@ -60,14 +57,11 @@ Ensure local paths are escaped properly (ex: 'C:\\\lab\\\file.vmx').
 
 
 ## ConvertVmxToOvfa
-** Requires the OVFTool be installed on the machine who's executing the conversion commands. **
+**Requires the OVFTool be installed on the machine that's executing the conversion commands.**
 
 Takes in the path (inputPath) to the VMX and associated files to be converted and the output path where the resulting OVA or OVF files should be placed. 
 
 Ensure local paths are escaped properly (ex: C:\\lab\\file.vmx).
-
-** Note: If conversion process is being executed on a Windows-based machine, "cmd" and "/c" must be included in the list of command or the process will fail. 
-
 
 #### Inputs
 | Name       | Description                                                                                | Type     | Required |

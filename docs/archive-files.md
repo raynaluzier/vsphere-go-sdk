@@ -1,7 +1,7 @@
 # Archive - Files Functions
 
 ## MakeFileCopyList
-Takes in the source directory where the image file(s) are located (where the image files where originally downloaded to; ensure path is properly escaped 'c:\\\lab\\\'), image name, image type (OVA, OVF, or VMTX), and file suffix (ex: "1.1.0" or "20250128") if used; otherwise leave blank (""). The function will read the source directory, and based on the image type and image name, compile a list of expected files and add them to the `copyList` to be used for optionally copying to a target datastore. 
+Takes in the source directory where the image file(s) are located (ensure path is properly escaped 'c:\\\lab\\\'), image name, image type (OVA, OVF, or VMTX), and file suffix (ex: "1.1.0" or "20250128") if used; otherwise leave blank (""). The function will read the source directory, and based on the image type and image name, compile a list of expected files and add them to the `copyList` to be used for optionally copying to a target datastore. 
 
 ** The list of expected files assumes typical vSphere file naming conventions using the machine or image name as a base and a series of specific disk files depending on image type, and the current vmware.log file. The list will cycle through and check for up to 15 disk numbers.
 
@@ -45,7 +45,7 @@ Directory paths should be properly escaped (ex: 'e:\\\lab\\\').
 #### Inputs
 | Name      | Description                                                                                | Type              | Required |
 |-----------|--------------------------------------------------------------------------------------------|-------------------|:--------:|
-| sourceDir | Source directory where the image file(s) are located to be copied                          | string            | TRUE     |
+| sourceDir | Source directory where the image file(s) are to be copied from                             | string            | TRUE     |
 | targetDir | Destination directory where the image file(s) should be copied; this should be a datastore | string            | TRUE     |
 | copyList  | List of files to copy based image type                                                     | []string          | TRUE     |
 | client    | Authenticated SSH client session                                                           | *sshclient.Client | TRUE     |
@@ -54,3 +54,14 @@ Directory paths should be properly escaped (ex: 'e:\\\lab\\\').
 | Name     | Description                                                                | Type     |
 |----------|----------------------------------------------------------------------------|----------|
 | (result) | Resulting string of either "Copy Process Failed" or "End of Copy Process"  | string   |
+
+
+## LinuxCopyFiles (PLACEHOLDER)
+
+#### Inputs
+| Name      | Description                                                               | Type     | Required |
+|-----------|---------------------------------------------------------------------------|----------|:--------:|
+
+#### Outputs
+| Name     | Description                                                                | Type     |
+|----------|----------------------------------------------------------------------------|----------|
