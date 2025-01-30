@@ -3,6 +3,10 @@
 ## VcenterAuth
 Takes in the credential and server information for a vCenter account with the adequate level of permissions to authenticate with vCenter, register new VMs, convert VMs into templates, query for resources such as datacenters, datastores, resource pools, and folders to get the object's ID. The result is a token that will be used to authorize subsequent vSphere API calls.
 
+As part of this process, the provided vCenter server name/IP will be checked to see if it includes the necessary web protocol to make the authentication request. If not present, we will first try adding 'https://' to the server and try authentication. This may fail with an "unauthenticated" error, which can happen if the the server is correct, but the web protocol is wrong. Given that we add 'https' first if the web protocol is missing, this doesn't account for environments like test/dev that may only be using 'http'.
+
+In this case, if the protocol is 'https' AND the response body contains "Authentication required.", we call `AddHttpProtocol` which will look for 'https://', remove it if found and replace it with 'http://'. From there, the `VcenterAuth` function will call itself again to retry the authentication.
+
 #### Inputs
 | Name    | Description                                                                                   | Type    | Required |
 |---------|-----------------------------------------------------------------------------------------------|---------|:--------:|
@@ -16,8 +20,29 @@ Takes in the credential and server information for a vCenter account with the ad
 | token  | Token resulting from a successful vCenter authentication request; used to authorize subsequent API calls  | string   |
 
 
-## AddUrlProtocol
-Looks at the server address and if it's missing 'https://', the function adds this. If the server address already contains the http/https protocol, the existing name is returned. This supports the `VcenterAuth` function to ensure the provided server address is formatted for the API call.
+## AddHttpsProtocol
+Looks at the server address and if it's missing 'http' (accounting for either http or https), the function prefixes the server with 'https://' first and tries the authentication. If the server address already contains the http/https protocol, the existing name is returned. 
+
+This supports the `VcenterAuth` function to ensure the provided server address is formatted for the API call.
+
+#### Inputs
+| Name       | Description                                        | Type     | Required |
+|------------|----------------------------------------------------|----------|:--------:|
+| server     | FQDN or IP address of the target vCenter server    | string   | TRUE     |
+
+#### Outputs
+| Name                | Description                        | Type     |
+|---------------------|------------------------------------|----------|
+| serverUrl / server* | URL of the target vCenter server   | string   |
+* If server address already contains http/https protocol
+
+
+## AddHttpProtocol
+This supports the `VcenterAuth` function to ensure the provided server address is formatted for the API call and called in the event making the API call via 'https://' fails with an "unauthenticated" error, which can happen if the the server is correct, but the web protocol is wrong. Given that we add 'https' first if the web protocol is missing, this doesn't account for environments like test/dev that may only be using 'http'.
+
+In this case, if the protocol is 'https' AND the response body contains "Authentication required.", we call this function (`AddHttpProtocol`) which will look for 'https://', remove it if found and replace it with 'http://'. From there, the `VcenterAuth` function will call itself again to retry the authentication.
+
+In the event this function is used elsewhere, it will also check for 'http' and return the server as-is, else it will add 'http://' if the server name/IP doesn't contain a web protocol.
 
 #### Inputs
 | Name       | Description                                        | Type     | Required |
@@ -76,7 +101,7 @@ Takes in the full path to the file and renames it to the new file path. This fun
 
 
 ## GetFileType
-Takes in the path to a file and extracts the file extension. The file extension is then returned. 
+Takes in the path to a file and extracts the file extension. The file extension (without leading ".") is then returned. 
 
 This supports the `CheckFileConvert` function which uses an image's primary Artifactory download URI to determine the image type and then converts it to a VMX as appropriate in prep to import it into vCenter. The download URI used should end with OVA, OVF, or VMTX.
 
@@ -92,7 +117,7 @@ This supports the `CheckFileConvert` function which uses an image's primary Arti
 
 
 ## ParseUriForFilename
-Takes in either the image's Artifactory artifact URI or download URI address for the primary image file (OVA, OVF, or VMTX) and parses it for the file name.
+Takes in either the image's Artifactory artifact URI or download URI address for the primary image file (OVA, OVF, or VMTX) and parses it for the file name. If the URI doesn't contain a file extension, it will log an error that the URI doesn't contain a complete filename, but it will still return the last segment in the URI provided.
 
 #### Inputs
 | Name         | Description                                                 | Type     | Required |

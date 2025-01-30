@@ -5,7 +5,9 @@ import (
 	"os"
 
 	_ "github.com/raynaluzier/vsphere-go-sdk/common"
+	_ "github.com/raynaluzier/vsphere-go-sdk/govmomi"
 	"github.com/raynaluzier/vsphere-go-sdk/util"
+	_ "github.com/raynaluzier/vsphere-go-sdk/vm"
 	//"golang.org/x/crypto/ssh" // go get golang.org/x/crypto/ssh
 )
 
@@ -20,16 +22,15 @@ func main() {
 	//clusterName := os.Getenv("VCENTER_CLUSTER")
 	//imageName := os.Getenv("IMAGE_NAME")
 
-	//logLevel 	:= os.Getenv("LOGGING")
+	logLevel 	:= os.Getenv("LOGGING")
 	outputDir 	:= os.Getenv("OUTPUTDIR")
 
 	util.VcServer = vCenter
 	util.VcUser = vcUser
 	util.VcPassword = vcPass
-	//util.Logging   = logLevel
+	util.Logging   = logLevel
 	util.OutputDir = outputDir
 	//===================================================
-
-
+	
 	
 }

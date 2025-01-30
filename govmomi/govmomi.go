@@ -71,6 +71,12 @@ func GetResPoolId(user, pass, server, resPoolName, datacenterName, clusterName s
 	finder   := find.NewFinder(client.Client, true)
 
 	if resPoolName == "" && clusterName == "" {
+		dc, err := finder.DefaultDatacenter(ctx)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error getting default datacenter: %s\n", err)
+			os.Exit(1)
+		}
+		finder.SetDatacenter(dc)
 		resPool, err = finder.DefaultResourcePool(ctx)
 	} else if resPoolName != "" && clusterName != "" {
 		resPoolPath = "/" + datacenterName + "/host/" + clusterName + "/Resources/" + resPoolName
@@ -80,7 +86,13 @@ func GetResPoolId(user, pass, server, resPoolName, datacenterName, clusterName s
 		resPool, err = finder.ResourcePool(ctx, resPoolPath)
 	} else {
 		fmt.Println("Not enough information provided to find a specific resource pool.")
-		fmt.Println("Using the default resource pool...")
+		fmt.Println("Using the default cluster and default resource pool...")
+		dc, err := finder.DefaultDatacenter(ctx)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error getting default datacenter: %s\n", err)
+			os.Exit(1)
+		}
+		finder.SetDatacenter(dc)
 		resPool, err = finder.DefaultResourcePool(ctx)
 	}
 	if err != nil {
@@ -125,10 +137,34 @@ func GetFolderId(user, pass, server, folderName, datacenterName string) (string,
 	var folderPath string
 	finder   := find.NewFinder(client.Client, true)
 
-	if folderName == "" {
+	if folderName == "" && datacenterName != "" {
 		folderPath = "/" + datacenterName + "/vm"                // Ex: Folder:group-v10 @ /Lab/vm
-	} else {
+	} else if folderName != "" && datacenterName != "" {
 		folderPath = "/" + datacenterName + "/vm/" + folderName	 // Ex: Folder:group-v1141 @ /Lab/vm/test-vms
+	} else if folderName == "" && datacenterName == "" {
+		dc, err := finder.DefaultDatacenter(ctx)     			 // Ex: Datacenter:datacenter-3 @ /Lab
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error getting default datacenter: %s\n", err)
+			os.Exit(1)
+		}
+
+		strDc := dc.String()
+		_, after, _ := strings.Cut(strDc, "@ ")      			// Returns: /Lab
+		datacenterName := after
+		folderPath = "/" + datacenterName + "/vm"
+
+	} else if folderName != "" && datacenterName == "" {
+		fmt.Println("Not enough information provided to find a specific folder.")
+		fmt.Println("Using the default datacenter and root folder...")
+		dc, err := finder.DefaultDatacenter(ctx)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error getting default datacenter: %s\n", err)
+			os.Exit(1)
+		}
+		strDc := dc.String()
+		_, after, _ := strings.Cut(strDc, "@ ")      			// Returns: /Lab
+		datacenterName := after
+		folderPath = "/" + datacenterName + "/vm"
 	}
 
 	folder, err := finder.Folder(ctx, folderPath)
@@ -217,7 +253,7 @@ func MarkAsTemplate(user, pass, server, imageName, datacenterName string) (strin
 			return "Failure"
 		}
 	} else if len(newVmList) == 0 {
-		log.Fatal("Unable to find image in vCenter.")
+		log.Fatal("Unable to find image in vCenter or Datacenter: " + dc.String())
 		return "Failure"
 	} else {
 		log.Fatal("More than one image named: " + imageName + " was returned.")

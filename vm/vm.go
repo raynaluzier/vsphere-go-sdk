@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -32,20 +31,20 @@ func CheckFileConvert(outputDir, downloadUri string) string {
 
 	switch fileType {
 	case "ova":
-		fmt.Println("File type found: " + fileType + "; converting to vmx...")
+		common.LogTxtHandler().Info("File type found: " + fileType + "; converting to vmx...")
 		result = ConvertOvfaToVmx(sourcePath, newPath)
 	case "ovf":
-		fmt.Println("File type found: " + fileType + "; converting to vmx...")
+		common.LogTxtHandler().Info("File type found: " + fileType + "; converting to vmx...")
 		result = ConvertOvfaToVmx(sourcePath, newPath)
 	case "vmtx":
-		fmt.Println("File type found: " + fileType + "; converting to vmx...")
+		common.LogTxtHandler().Info("File type found: " + fileType + "; converting to vmx...")
 		result = common.RenameFile(sourcePath, newPath)
 	case "vmx":
-		fmt.Println("File is already in needed format: vmx.")
+		common.LogTxtHandler().Info("File is already in needed format: vmx.")
 		result = "Success"
 	default:
-		log.Fatal("Found unsupported file type: " + fileType)
-		log.Fatal("Supported file types are: ova, ovf, vmtx, and vmx")
+		common.LogTxtHandler().Error("Found unsupported file type: " + fileType)
+		common.LogTxtHandler().Error("Supported file types are: ova, ovf, vmtx, and vmx")
 		result = "Failed"
 	}
 	return result
@@ -118,7 +117,8 @@ func RegisterVm(token, vcServer, dcName, dsName, imageName, folderId, resPoolId 
 	if resp.StatusCode == 200 {
 		statusCode = "200"
 	} else {
-		statusCode = (fmt.Sprintf("%v", resp.StatusCode))           // Test this
+		statusCode = (fmt.Sprintf("%v", resp.StatusCode))
+		common.LogTxtHandler().Error("Error registering VMX with vCenter. Validate inputs and ensure image is not already in the target inventory.")
 	}
 	//fmt.Println(statusCode)
 	return statusCode
