@@ -26,7 +26,7 @@ func VcenterAuth(user, pass, server string) string {
 	
 	if err != nil {
 		strErr := fmt.Sprintf("%v\n", err)
-		fmt.Println("Error with POST request - " + strErr)
+		LogTxtHandler().Error("Error with POST request - " + strErr)
 	}
 	
 	defaultTransport := http.DefaultTransport.(*http.Transport)

@@ -3,7 +3,6 @@ package govmomi
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/url"
 	"os"
 	"regexp"
@@ -85,8 +84,8 @@ func GetResPoolId(user, pass, server, resPoolName, datacenterName, clusterName s
 		resPoolPath = "/" + datacenterName + "/host/" + clusterName + "/Resources"
 		resPool, err = finder.ResourcePool(ctx, resPoolPath)
 	} else {
-		fmt.Println("Not enough information provided to find a specific resource pool.")
-		fmt.Println("Using the default cluster and default resource pool...")
+		common.LogTxtHandler().Info("Not enough information provided to find a specific resource pool.")
+		common.LogTxtHandler().Info("Using the default cluster and default resource pool...")
 		dc, err := finder.DefaultDatacenter(ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error getting default datacenter: %s\n", err)
@@ -154,8 +153,8 @@ func GetFolderId(user, pass, server, folderName, datacenterName string) (string,
 		folderPath = "/" + datacenterName + "/vm"
 
 	} else if folderName != "" && datacenterName == "" {
-		fmt.Println("Not enough information provided to find a specific folder.")
-		fmt.Println("Using the default datacenter and root folder...")
+		common.LogTxtHandler().Info("Not enough information provided to find a specific folder.")
+		common.LogTxtHandler().Info("Using the default datacenter and root folder...")
 		dc, err := finder.DefaultDatacenter(ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error getting default datacenter: %s\n", err)
@@ -169,7 +168,7 @@ func GetFolderId(user, pass, server, folderName, datacenterName string) (string,
 
 	folder, err := finder.Folder(ctx, folderPath)
 	if err != nil {
-		fmt.Println("Unable to get folder by path: " + folderPath)
+		common.LogTxtHandler().Error("Unable to get folder by path: " + folderPath)
 	}
 
 	strFolder := folder.String()
@@ -212,7 +211,7 @@ func MarkAsTemplate(user, pass, server, imageName, datacenterName string) (strin
 
 	if datacenterName == "" {
 		dc, err = finder.DefaultDatacenter(ctx)
-		fmt.Println("No datacenter specified. Using default: " + dc.String())
+		common.LogTxtHandler().Info("No datacenter specified. Using default: " + dc.String())
 	} else {
 		dcName := "/" + datacenterName
 		dc, err = finder.Datacenter(ctx, dcName)
@@ -246,17 +245,17 @@ func MarkAsTemplate(user, pass, server, imageName, datacenterName string) (strin
 		vm.MarkAsTemplate(ctx)
 		isTemplate, err := vm.IsTemplate(ctx)
 		if isTemplate == true {
-			fmt.Println("Successfully converted " + imageName + " to a template.")
+			common.LogTxtHandler().Info("Successfully converted " + imageName + " to a template.")
 			return "Success"
 		} else {
-			fmt.Println("Error converting " + imageName + " to a template - ", err)
+			common.LogTxtHandler().Error("Error converting " + imageName + " to a template - ", err)
 			return "Failure"
 		}
 	} else if len(newVmList) == 0 {
-		log.Fatal("Unable to find image in vCenter or Datacenter: " + dc.String())
+		common.LogTxtHandler().Error("Unable to find image in vCenter or Datacenter: " + dc.String())
 		return "Failure"
 	} else {
-		log.Fatal("More than one image named: " + imageName + " was returned.")
+		common.LogTxtHandler().Error("More than one image named: " + imageName + " was returned.")
 		return "Failure"
 	}
 }

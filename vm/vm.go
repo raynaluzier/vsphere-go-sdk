@@ -79,13 +79,13 @@ func RegisterVm(token, vcServer, dcName, dsName, imageName, folderId, resPoolId 
 	payloadBytes, err := json.Marshal(data)
 
 	if err != nil {
-		fmt.Println("Error: Unable to marshal json data - ", err)
+		common.LogTxtHandler().Error("Error: Unable to marshal json data - ", err)
 	}
 	body := bytes.NewReader(payloadBytes)
 
 	req, err := http.NewRequest(http.MethodPost, requestPath, body)
 	if err != nil {
-		fmt.Println("Error: Error making HTTP POST request - ", err)
+		common.LogTxtHandler().Error("Error: Error making HTTP POST request - ", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	newToken := common.TrimQuotes(token) // Required or auth will fail
@@ -107,10 +107,11 @@ func RegisterVm(token, vcServer, dcName, dsName, imageName, folderId, resPoolId 
 
 	client := &http.Client{Transport: customTransport}
 	resp, err := client.Do(req)
-	//fmt.Println(resp)
+	strResp := fmt.Sprintf("%v\n", resp)
+	common.LogTxtHandler().Debug(strResp)
 
 	if err != nil {
-		fmt.Println("Error registering VMX with vCenter - ", err)
+		common.LogTxtHandler().Error("Error registering VMX with vCenter - ", err)
 	}
 	defer resp.Body.Close()
 
@@ -120,7 +121,7 @@ func RegisterVm(token, vcServer, dcName, dsName, imageName, folderId, resPoolId 
 		statusCode = (fmt.Sprintf("%v", resp.StatusCode))
 		common.LogTxtHandler().Error("Error registering VMX with vCenter. Validate inputs and ensure image is not already in the target inventory.")
 	}
-	//fmt.Println(statusCode)
+	common.LogTxtHandler().Debug("Status Code: " + statusCode)
 	return statusCode
 }
 
@@ -141,27 +142,27 @@ func ConvertOvfaToVmx(inputPath, outputPath string) string {
 	if ovfMatched == false {
 		ovaMatched, err = regexp.MatchString("ova", inputPath)
 		if ovaMatched == false {
-			fmt.Println("Error: Input is neither an OVA or OVF file.")
-			fmt.Println("Please provide the full file path to the OVA or OVF that's to be converted.") 
+			common.LogTxtHandler().Error("Error: Input is neither an OVA or OVF file.")
+			common.LogTxtHandler().Error("Please provide the full file path to the OVA or OVF that's to be converted.") 
 		}
 	}
 	if err != nil {
-		fmt.Println("Unable to search for OVA/OVF string.")
+		common.LogTxtHandler().Error("Unable to search for OVA/OVF string.")
 	}
 	
 	// Ensure output is a VMX file
 	vmxMatched, err = regexp.MatchString("vmx", outputPath)
 	if vmxMatched == false {
-		fmt.Println("Error: Output does not include a VMX file path.")
-		fmt.Println("Please provide the full destination file path to the resulting VMX file.") 	
+		common.LogTxtHandler().Error("Error: Output does not include a VMX file path.")
+		common.LogTxtHandler().Error("Please provide the full destination file path to the resulting VMX file.") 	
 	}
 	if err != nil {
-		fmt.Println("Unable to search for VMX string.")
+		common.LogTxtHandler().Error("Unable to search for VMX string.")
 	}
 	
 	ovfCmd := "ovftool " + inputPath + " " + outputPath
 
-	fmt.Println("Beginning conversion process... This could take a while.")
+	common.LogTxtHandler().Info("Beginning conversion process... This could take a while.")
 	switch runtime.GOOS{
 	case "windows":
 		cmd = exec.Command("cmd", "/c", ovfCmd)
@@ -172,7 +173,7 @@ func ConvertOvfaToVmx(inputPath, outputPath string) string {
 	cmd.Stdout = os.Stdout
 
 	if err := cmd.Run(); err != nil {
-		fmt.Println("Could not run the exec shell command.")
+		common.LogTxtHandler().Error("Could not run the exec shell command.")
 		// if mac or linux, do we need to prefice cmd with "bash"?
 		return "Failed"
 	} else {
