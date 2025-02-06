@@ -14,7 +14,7 @@ To run functions from this module, the following pre-requisites must be met:
 
 4. Ensure the `GOPATH` (the local directory to where the Go app is installed) is configured, as well as the environment variable to the path of the Go binary (on Windows, this would typically be `C:\Program Files\Go\bin`, for example).
 
-5. Populating the Global Variables (see: `/util/util.go`): **VcServer**, **VcUser**, **VcPassword**, **OutputDir**, and optionally, **Logging**. This can be done when calling a function in the `tasks` package (e.g. as part of a plugin operation), by configuring the `.env` file, or statically (only recommended for testing).
+5. Populating the Global Variables (see: `/util/util.go`): **VcServer**, **VcUser**, **VcPassword**, **OutputDir**, and optionally, **Logging**. This can be done by configuring the `.env` file or statically (only recommended for testing).
 
 Using .env File: Configure the `.env` file with vCenter credentials, vCenter server, and then the Output Directory is used for downloading the image file(s) to ensure they're placed in the desired datastore location. Logging provides an option to change the level of logging to display.
 
@@ -27,18 +27,13 @@ Using .env File: Configure the `.env` file with vCenter credentials, vCenter ser
 Then use `os.Getenv` to set `util.VcServer`, `util.VcUser`, `util.VcPasword`, `util.OutputDir`, and `util.Logging` respectively.
 
 ## About
-This SDK is broken into several packages: `common`, `govmomi`, `vm`, `tasks`, and `util` based on the underlying behavior of the functions. Some functions are specifically related to certain behaviors or package sources so they have been grouped together into functional packages as described below.
+This SDK is broken into several packages: `common`, `govmomi`, `vm`, and `util` based on the underlying behavior of the functions. Some functions are specifically related to certain behaviors or package sources so they have been grouped together into functional packages as described below.
 
 ### Common
 These functions perform small, generalized supporting tasks for the other focused modules. These functions can be found under the `common.go` file.
 
 ### Govmomi
 These functions make use of the [Govmomi](https://github.com/vmware/govmomi) package to establish an authentication client and use that client to gather specific vCenter resource information that is required to perform other functions and tasks in vCenter.
-
-### Tasks
-These functions are larger operations that first set the global variables, and then make a series of function calls to perform specific activities. While they can be called independently, they were created in support of a custom Packer plugin to streamline passing environment-specific variables, such as the vCenter credentials, server, logging, and output directory. Rather than passing one or more of these to every function in the SDK (in addition to the required inputs), they are passed in ONCE to the desired function, the global variables are set, and then they are used automatically when calling each sub-function without having to pass them in over and over.
-
-These larger tasks also group the targeted functions of a desired behavior into a single operation and keep the plugin code to a minimum and simplify performing that desired behavior.
 
 ### Util
 This is a list of the global variables used within this SDK. As with any Go package, they can be used by importing the `util` package path and then referencing them as `util.Token`, `util.ServerApi`, etc.
@@ -58,5 +53,4 @@ A reference outline of each function's behavior and any special notes can be fou
 
 - [Common](https://github.com/raynaluzier/vsphere-go-sdk/blob/main/docs/common.md)
 - [Govmomi](https://github.com/raynaluzier/vsphere-go-sdk/blob/main/docs/govmomi.md)
-- [Tasks](https://github.com/raynaluzier/vsphere-go-sdk/blob/main/docs/tasks.md)
 - [VM](https://github.com/raynaluzier/vsphere-go-sdk/blob/main/docs/vm.md)
