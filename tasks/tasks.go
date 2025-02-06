@@ -28,6 +28,7 @@ func ImportVm(vcUser, vcPass, vcServer, dcName, dsName, imageName, folderName, r
         os.Exit(1)
 	}
 
+	// missing check file and convert process...
 	statusCode := vm.RegisterVm(token, vcServer, dcName, dsName, imageName, folderId, resPoolId)
 	fmt.Println("Status Code of Register VM task: ", statusCode)
 

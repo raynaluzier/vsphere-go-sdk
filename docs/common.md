@@ -85,7 +85,7 @@ This function removes the inherent quotes from the string and returns the result
 | s    | Resulting string with quotes removed  | string  |
 
 
-## Rename File
+## RenameFile
 Takes in the full path to the file and renames it to the new file path. This function supports renaming a VMTX file (VM Template) to VMX file (virtual machine) so that it can be imported into vCenter before we convert it back to a template. (We can only import VMX files.)
 
 #### Inputs
@@ -156,6 +156,36 @@ Checks the provided path to see if it's Unix-based (has '/') or Windows-based (h
 | Name       | Description                                        | Type |
 |------------|----------------------------------------------------|------|
 | isWinPath  | Returns true of the provided path is Windows-based | bool |
+
+
+## FileNamePathFromWin
+Takes in the full Windows-based file path and returns the separated filename and filepath.
+
+#### Inputs
+| Name  | Description                                          | Type   | Required |
+|-------|------------------------------------------------------|--------|:--------:|
+| path  | Path to provided directory; such as Output Directory | string | TRUE     |
+
+#### Outputs
+| Name     | Description                                        | Type   |
+|----------|----------------------------------------------------|--------|
+| fileName | filename with extension                            | string |
+| filePath | Windows-based directory path, without the filename | string |
+
+
+## FileNamePathFromLnx
+Takes in the full Linux-based file path and returns the separated filename and filepath.
+
+#### Inputs
+| Name  | Description                                          | Type   | Required |
+|-------|------------------------------------------------------|--------|:--------:|
+| path  | Path to provided directory; such as Output Directory | string | TRUE     |
+
+#### Outputs
+| Name     | Description                                      | Type   |
+|----------|--------------------------------------------------|--------|
+| fileName | filename with extension                          | string |
+| filePath | Linux-based directory path, without the filename | string |
 
 
 ## CheckAddSlashToPath

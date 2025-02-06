@@ -15,32 +15,42 @@ import (
 	"github.com/raynaluzier/vsphere-go-sdk/common"
 )
 
-func CheckFileConvert(outputDir, downloadUri string) string {
+func SetPathsFromDownloadUri(outputDir, downloadUri string) (string, string, string) {
 	// Takes output directory and download URI, parses the image name from the download URI and determines 
-	// the source file path
-	// File type is checked; if OVA/OVF, it's converted to VMX. If VMTX, it's renamed to VMX.
-	var result string
-	var sourcePath, newPath string
+	// the image file type, source path, and target path that will be used with the image conversion process, if needed
+
+	// 'downloadUri' is the Artifactory path where the image files were downloaded from; this is used to determine the fileName, imageName, and source file type
+	// without having the user provide it.
+	// 'outputDir' is the location where the image files were originally downloaded to
+	// 'targetPath' is the full file path where the converted VMX image files will output TO; assuming this is the same directory where the images were downloaded to
+	// 'fileType' is pulled from file name (ext without ".")
+	var sourcePath, targetPath string
 	outputDir  = common.CheckAddSlashToPath(outputDir)
 	fileName  := common.ParseUriForFilename(downloadUri)
 	imageName := common.ParseFilenameForImageName(fileName)
 	sourcePath = outputDir + fileName
-	newPath    = outputDir + imageName + ".vmx"
+	targetPath = outputDir + imageName + ".vmx"
 
 	fileType := common.GetFileType(fileName)
+
+	return fileType, sourcePath, targetPath
+}
+
+func ConvertImageByType(fileType, sourcePath, targetPath string) string {
+	var result string
 
 	switch fileType {
 	case "ova":
 		common.LogTxtHandler().Info("File type found: " + fileType + "; converting to vmx...")
-		result = ConvertOvfaToVmx(sourcePath, newPath)
+		result = ConvertOvfaToVmx(sourcePath, targetPath)
 	case "ovf":
 		common.LogTxtHandler().Info("File type found: " + fileType + "; converting to vmx...")
-		result = ConvertOvfaToVmx(sourcePath, newPath)
+		result = ConvertOvfaToVmx(sourcePath, targetPath)
 	case "vmtx":
 		common.LogTxtHandler().Info("File type found: " + fileType + "; converting to vmx...")
-		result = common.RenameFile(sourcePath, newPath)
+		result = common.RenameFile(sourcePath, targetPath)
 	case "vmx":
-		common.LogTxtHandler().Info("File is already in needed format: vmx.")
+		common.LogTxtHandler().Info("File is already in format: vmx")
 		result = "Success"
 	default:
 		common.LogTxtHandler().Error("Found unsupported file type: " + fileType)
@@ -161,12 +171,15 @@ func ConvertOvfaToVmx(inputPath, outputPath string) string {
 	}
 	
 	ovfCmd := "ovftool " + inputPath + " " + outputPath
+	fmt.Println("OVF CMD: " + ovfCmd)
 
 	common.LogTxtHandler().Info("Beginning conversion process... This could take a while.")
 	switch runtime.GOOS{
 	case "windows":
+		fmt.Println("Running Windows shell...")
 		cmd = exec.Command("cmd", "/c", ovfCmd)
 	default: // mac & linux
+		fmt.Println("Running Linux shell...")
 		cmd = exec.Command(ovfCmd)   // mac "bash"
 	}
 

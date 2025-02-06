@@ -1,18 +1,45 @@
 # VM Functions
 
-## CheckFileConvert
-Takes the provided output directory (datastore location) and download URI for the primary image file (OVA, OVF, or VMTX), parses the image name from the download URI, and determines the source file path. The file type is checked and depending on whether it's OVA, OVF, or VMTX, it's converted to a VMX as appropriate. This is in preparation for importing the template (as a virtual machine) into vCenter and marking it as a VM Template.
+## SetPathsFromDownloadUri
+This function is part of the workflow where the image is downloaded from Artifactory, image files converted to VMX, before being imported into vCenter and then marking it as a VM Template (VMTX).
+
+It takes in the provided output directory and download URI. The download URI is parsed for the image name and image file type (OVA, OVF, or VMTX), and the output directory is used to set the full file path to the source and target locations. It is assumed that the converted image will reside in the same location as the originating image files that were downloaded from Artifactory. So for example:
+
+    Source Path:  E:\lab-servs\win22\win22.ova
+    Target Path:  E:\lab-servs\win22\win22.vmx (and associated standard VM files)
 
 #### Inputs
-| Name         | Description                                                                  | Type     | Required |
-|--------------|------------------------------------------------------------------------------|----------|:--------:|
-| outputDir    | Connected datastore location where the downloaded image files reside         | string   | TRUE     |
-| downloadUri  | Download URI for the primary image file (OVA, OVF, or VMTX) from Artifactory | string   | TRUE     |
+| Name        | Description                                                                 | Type     | Required |
+|-------------|-----------------------------------------------------------------------------|----------|:--------:|
+| outputDir   | Accessible datastore path where the image files were downloaded             | string   | TRUE     |
+| downloadUri | Artifactory download URI of the image; determines image name and image type | string   | TRUE     |
 
 #### Outputs
-| Name        | Description                                                | Type     |
-|-------------|------------------------------------------------------------|----------|
-| (result)    | Result of conversion process; either "Success" or "Failed" | string   |
+| Name       | Description                                                                                                     | Type     |
+|------------|-----------------------------------------------------------------------------------------------------------------|----------|
+| fileType   | Type of image file (OVA, OVF, or VMTX)                                                                          | string   |
+| sourcePath | Full file path to the source image file being converted (set from `outputDir`)                                  | string   |
+| targetPath | Full file path to the target image VMX file (and associated files) that will result after the image conversion  | string   |
+
+
+## ConvertImageByType
+Takes in the image's file type, source directory where the current image file(s) reside, the target directory where the converted image files will be placed, and the `fileType` (ova, ovf, or vmtx) which will determine the type image conversion process that needs to take place to get to type VMX. For example:
+
+    File Type:  ova
+    Source Path:  E:\lab-servs\win22\win22.ova
+    Target Path:  E:\lab-servs\win22\win22.vmx (and associated standard VM files)
+
+#### Inputs
+| Name       | Description                                                                                                    | Type     | Required |
+|------------|----------------------------------------------------------------------------------------------------------------|----------|:--------:|
+| fileType   | Type of image file (OVA, OVF, or VMTX)                                                                         | string   | TRUE     |
+| sourcePath | Full file path to the source image file being converted (set from `outputDir`)                                 | string   | TRUE     |
+| targetPath | Full file path to the target image VMX file (and associated files) that will result after the image conversion | string   | TRUE     |
+
+#### Outputs
+| Name    | Description                                                       | Type     |
+|---------|-------------------------------------------------------------------|----------|
+| result  | Resulting string result of the conversion ("Success" or "Failed") | string   |
 
 
 ## RegisterVm

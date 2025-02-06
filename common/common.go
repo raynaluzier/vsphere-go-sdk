@@ -205,6 +205,20 @@ func CheckPathType(path string) bool {
 	return isWinPath
 }
 
+func FileNamePathFromWin(path string) (string, string) {
+	segments := strings.Split(path, "\\")	    // Split file path into segments
+	fileName := segments[len(segments)-1]	     // Determine filename from path
+	filePath := path[:len(path)-len(fileName)]   // Determine just path without filename
+	return fileName, filePath
+}
+
+func FileNamePathFromLnx(path string) (string, string) {
+	segments := strings.Split(path, "/")	    // Split file path into segments
+	fileName := segments[len(segments)-1]	     // Determine filename from path
+	filePath := path[:len(path)-len(fileName)]   // Determine just path without filename
+	return fileName, filePath
+}
+
 func CheckAddSlashToPath(path string) string {
 	lastChar := path[len(path)-1:]
 	winPath := CheckPathType(path)
