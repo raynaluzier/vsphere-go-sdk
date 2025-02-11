@@ -16,6 +16,7 @@ import (
 )
 
 func SetPathsFromDownloadUri(outputDir, downloadUri string) (string, string, string) {
+	common.LogTxtHandler().Info(">>>>>>> Setting Source and Target Paths for Conversion.....")
 	// Takes output directory and download URI, parses the image name from the download URI and determines 
 	// the image file type, source path, and target path that will be used with the image conversion process, if needed
 
@@ -37,6 +38,11 @@ func SetPathsFromDownloadUri(outputDir, downloadUri string) (string, string, str
 	fileType  := common.GetFileType(fileName)				 
 	sourcePath = outputDir + imageName + fileName				// E:\\Lab\\win2022\\win2022.ova
 
+	common.LogTxtHandler().Debug("Parsed Filename: " + fileName)
+	common.LogTxtHandler().Debug("Parsed Image Name: " + imageName)
+	common.LogTxtHandler().Debug("Parsed Image File Type: " + fileType)
+	common.LogTxtHandler().Debug("Source Path for Conversion: " + sourcePath)
+
 	if fileType == "vmtx" {
 		fileNoExt := strings.TrimSuffix(fileName, "vmtx")		// win2022.vmtx returns: win2022.
 		// targetPath used in rename
@@ -44,6 +50,8 @@ func SetPathsFromDownloadUri(outputDir, downloadUri string) (string, string, str
 	} else {  // ova or ovf...
 		targetPath = outputDir									// E:\\Lab --> ovftool will dump files to:  E:\\Lab\\win2022\\[win2022 VMX files]
 	}
+	common.LogTxtHandler().Debug("Target Path for Conversion: " + targetPath)
+
 	return fileType, sourcePath, targetPath
 }
 
@@ -59,24 +67,33 @@ func SetPathNoDownload(sourcePath string) string {
 		imageName = common.ParseFilenameForImageName(fileName)		// returns: win22
 		checkPath = imageName + "\\" + fileName						// returns: win22\\win22.ova
 
+		common.LogTxtHandler().Debug("Parsed Filename: " + fileName)
+		common.LogTxtHandler().Debug("Parsed Image Name: " + imageName)
+		common.LogTxtHandler().Debug("Parsed Image File Type: " + fileType)
+		common.LogTxtHandler().Debug("Image Path Being Checked For: " + checkPath)
+
 		if strings.Contains(sourcePath, checkPath) {		              //if 'E:\\Lab\\win22\\win22.ova' contains 'win22\\win22.ova'....
 			if fileType == "vmtx" {
 				trimmedPath := strings.TrimSuffix(sourcePath, "vmtx")     // Ex: E:\\Lab\\win22\\win22.vmtx, returns: E:\\Lab\\win22\\win22.
 				targetPath = trimmedPath + "vmx"					      // returns: E:\\Lab\\win22\\win22.vmx
+				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
 			} else {  // ova or ovf
 				targetPath = strings.TrimSuffix(sourcePath, checkPath)    // Ex: 'E:\\Lab\\win22\\win22.ova', returns: 'E:\\Lab\\'
+				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
 			}
 		} else {
 			if fileType == "vmtx" {
 				trimmedPath := strings.TrimSuffix(sourcePath, "vmtx")		// Ex: G:\\this\\path\\somefolder\\somefile.vmtx, returns: G:\\this\\path\\somefolder\\somefile.
 				targetPath = trimmedPath + "vmx"							// returns: G:\\this\\path\\somefolder\\somefile.vmx
+				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
 			} else {  // ova or ovf
 				file, parentDir := common.GetBaseImagePathWin(sourcePath)	// Ex: G:\\this\\path\\somefolder\\somefile.ovf, returns: somefile.ovf, somefolder
 				altPath := parentDir + "\\" + file							// returns: somefolder\\somefile.ovf
 				targetPath = strings.TrimSuffix(sourcePath, altPath)		// returns: G:\\this\\path\\
+				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
 			}
 		}
@@ -86,10 +103,16 @@ func SetPathNoDownload(sourcePath string) string {
 		imageName = common.ParseFilenameForImageName(fileName)		// returns: rhel9
 		checkPath = imageName + "/" + fileName						// returns: rhel/rhel9.ova
 
+		common.LogTxtHandler().Debug("Parsed Filename: " + fileName)
+		common.LogTxtHandler().Debug("Parsed Image Name: " + imageName)
+		common.LogTxtHandler().Debug("Parsed Image File Type: " + fileType)
+		common.LogTxtHandler().Debug("Image Path Being Checked For: " + checkPath)
+
 		if strings.Contains(sourcePath, checkPath) {		                //if '/lab/rhel9/rhel9.ova' contains 'rhel9/rhel9.ova'....
 			if fileType == "vmtx" {
 				trimmedPath := strings.TrimSuffix(sourcePath, "vmtx")		// Ex: /lab/rhel9/rhel9.vmtx, returns: /lab/rhel9/rhel9.
 				targetPath = trimmedPath + "vmx"					        // returns: /lab/rhel9/rhel9.vmx
+				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
 			} else {	// ova or ovf
 				targetPath = strings.TrimSuffix(sourcePath, checkPath)	    // Ex: '/lab/rhel9/rhel9.ova', returns: '/lab/'
@@ -99,11 +122,13 @@ func SetPathNoDownload(sourcePath string) string {
 			if fileType == "vmtx" {
 				trimmedPath := strings.TrimSuffix(sourcePath, "vmtx")		// Ex: /this/path/somefolder/somefile.vmtx, returns: /this/path/somefolder/somefile.
 				targetPath = trimmedPath + "vmx"							// returns: /this/path/somefolder/somefile.vmx
+				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
 			} else {  // ova or ovf
 				file, parentDir := common.GetBaseImagePathLnx(sourcePath)	// Ex: /this/path/somefolder/somefile.ovf, returns: somefile.ovf, somefolder
 				altPath := parentDir + "/" + file							// returns: somefolder/somefile.ovf
 				targetPath = strings.TrimSuffix(sourcePath, altPath)		// returns: /this/path/
+				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
 			}
 		}
@@ -148,6 +173,7 @@ func SetVmPathName(sourcePath, dsName string) string {
 	ext := common.GetFileType(sourcePath)             // extension without leading '.', example 'ova'
 	path := strings.TrimSuffix(sourcePath, ext)  	  // returns:  labimage/labimage.
 	vmPathName := "[" + dsName + "] " + path + "vmx"  // returns:  [datastore] labimage/labimage.vmx
+	common.LogTxtHandler().Info("vmPathName is set to: " + vmPathName)
 	return vmPathName
 }
 
@@ -181,13 +207,15 @@ func RegisterVm(token, vcServer, dcName, vmPathName, imageName, folderId, resPoo
 	payloadBytes, err := json.Marshal(data)
 
 	if err != nil {
-		common.LogTxtHandler().Error("Error: Unable to marshal json data - ", err)
+		strErr := fmt.Sprintf("%v\n", err)
+		common.LogTxtHandler().Error("Error: Unable to marshal json data - " + strErr)
 	}
 	body := bytes.NewReader(payloadBytes)
 
 	req, err := http.NewRequest(http.MethodPost, requestPath, body)
 	if err != nil {
-		common.LogTxtHandler().Error("Error: Error making HTTP POST request - ", err)
+		strErr := fmt.Sprintf("%v\n", err)
+		common.LogTxtHandler().Error("Error: Error making HTTP POST request - " + strErr)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	newToken := common.TrimQuotes(token) // Required or auth will fail
@@ -213,7 +241,8 @@ func RegisterVm(token, vcServer, dcName, vmPathName, imageName, folderId, resPoo
 	common.LogTxtHandler().Debug(strResp)
 
 	if err != nil {
-		common.LogTxtHandler().Error("Error registering VMX with vCenter - ", err)
+		strErr := fmt.Sprintf("%v\n", err)
+		common.LogTxtHandler().Error("Error registering VMX with vCenter - " + strErr)
 	}
 	defer resp.Body.Close()
 
