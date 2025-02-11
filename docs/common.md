@@ -188,6 +188,36 @@ Takes in the full Linux-based file path and returns the separated filename and f
 | filePath | Linux-based directory path, without the filename | string |
 
 
+## GetBaseImagePathWin
+Used with `SetPathNoDownload` to establish the target paths for the conversion process when the download step is skipped and for some reason the image path is not in the format of 'image_name\image_name.ext'. Based on the Windows path type, it gets the filename supplied in the source path and it's parent directory (without leading or ending slashes). `SetPathNoDownload` then uses this information to set the target directory based on the image type; and making the assumption that the converted image files will be placed in the same directory as the source image files for neatness.
+
+#### Inputs
+| Name       | Description                              | Type   | Required |
+|------------|------------------------------------------|--------|:--------:|
+| sourcePath | Full file path to the source image files | string | TRUE     |
+
+#### Outputs
+| Name      | Description                                                        | Type   |
+|-----------|--------------------------------------------------------------------|--------|
+| fileName  | Name and extension of the source image file (ex: win22.ova)        | string |
+| parentDir | The parent directory in the source path that houses the image file | string |
+
+
+## GetBaseImagePathLnx
+Used with `SetPathNoDownload` to establish the target paths for the conversion process when the download step is skipped and for some reason the image path is not in the format of 'image_name\image_name.ext'. Based on the Linux path type, it gets the filename supplied in the source path and it's parent directory (without leading or ending slashes). `SetPathNoDownload` then uses this information to set the target directory based on the image type; and making the assumption that the converted image files will be placed in the same directory as the source image files for neatness.
+
+#### Inputs
+| Name       | Description                              | Type   | Required |
+|------------|------------------------------------------|--------|:--------:|
+| sourcePath | Full file path to the source image files | string | TRUE     |
+
+#### Outputs
+| Name      | Description                                                        | Type   |
+|-----------|--------------------------------------------------------------------|--------|
+| fileName  | Name and extension of the source image file (ex: rhel9.ova)        | string |
+| parentDir | The parent directory in the source path that houses the image file | string |
+
+
 ## CheckAddSlashToPath
 Used with `CheckPathType`; based on path type (Windows vs. Unix), checks the provided path to see if it ends with the appropriate back or forward slashes. If not present, the function will add a slash as appropriate to the platform type. This ensures the output directory path provided is formatted as required.
 
@@ -200,7 +230,39 @@ Used with `CheckPathType`; based on path type (Windows vs. Unix), checks the pro
 #### Outputs
 | Name       | Description                                               | Type |
 |------------|-----------------------------------------------------------|------|
-| ture/false | Returns true if compared string match, regardless of case | bool |
+| true/false | Returns true if compared string match, regardless of case | bool |
+
+
+## TrimDriveLetter
+For a Windows-based path, if path contains ":", it trims off `[letter]:\`. For example:  'c:\\lab\\rat.txt' becomes 'lab\\rat.txt'. If the path doesn't contain ":", then the original path is returned
+
+This is used as the first step in forming the vmPathName in prep for the `RegisterVm` function.
+
+#### Inputs
+| Name | Description             | Type   | Required |
+|------|-------------------------|--------|:--------:|
+| path | Windows-based file path | string | TRUE     |
+
+#### Outputs
+| Name                | Description                                           | Type   |
+|---------------------|-------------------------------------------------------|--------|
+| remainingPath / path| File path without the leading drive letter (ex: c:\\) | string |
+
+
+## SwapSlashes
+Looks for Windows-based, backslash style pathing and changes to Unix-based, forward-slash style path. If no backlashes are found, then the original path is returned.
+
+This is used as the next step in forming the vmPathName in prep for the `RegisterVm` function.
+
+#### Inputs
+| Name   | Description                          | Type   | Required |
+|--------|--------------------------------------|--------|:--------:|
+| path   | File path to be checked and modified | string | TRUE     |
+
+#### Outputs
+| Name           | Description                                  | Type |
+|----------------|----------------------------------------------|------|
+| newPath / path | File path in Unix-style forward-slash format | bool |
 
 
 ## SetLoggingLevel

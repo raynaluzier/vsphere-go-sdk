@@ -219,6 +219,20 @@ func FileNamePathFromLnx(path string) (string, string) {
 	return fileName, filePath
 }
 
+func GetBaseImagePathWin(sourcePath string) (string, string) {
+	segments := strings.Split(sourcePath, "\\")	    // Split file path into segments
+	fileName := segments[len(segments)-1]	    // Determine filename from path (no begin or end slash)
+	parentDir := segments[len(segments)-2]		// Determine parent directory of file (no begin or end slash)
+	return fileName, parentDir
+}
+
+func GetBaseImagePathLnx(sourcePath string) (string, string) {
+	segments := strings.Split(sourcePath, "/")	    // Split file path into segments
+	fileName := segments[len(segments)-1]	    // Determine filename from path (no begin or end slash)
+	parentDir := segments[len(segments)-2]		// Determine parent directory of file (no begin or end slash)
+	return fileName, parentDir
+}
+
 func CheckAddSlashToPath(path string) string {
 	lastChar := path[len(path)-1:]
 	winPath := CheckPathType(path)
@@ -242,6 +256,25 @@ func CheckAddSlashToPath(path string) string {
 			return path
 		}
 	}
+}
+
+func TrimDriveLetter(path string) string {
+	// For path 'c:\lab\file.txt', returns 'lab\file.txt'
+	i := strings.Index(path, ":")
+	if i > -1 {
+		remainingPath := path[i+2:]
+		return remainingPath
+	}
+	return path
+}
+
+func SwapSlashes(path string) string {
+	// Changes win path to unix path
+	if strings.Contains(path, "\\") {
+		newPath := strings.ReplaceAll(path, "\\", "/")
+		return newPath
+	}
+	return path
 }
 
 func SetLoggingLevel() slog.Level {
