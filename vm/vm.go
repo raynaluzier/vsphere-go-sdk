@@ -4,16 +4,69 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/raynaluzier/vsphere-go-sdk/common"
 )
+
+func SetOvfFileList(sourcePath string) ([]string, error) {
+	// 'sourcePath' is full path to image file including filename
+	// Verifies and sets the list of OVF files to move
+	var fileName, sourcePathOnly, imageFileName string
+	var fileList []string
+	var fileTypes []string
+	var strI string
+
+	isWinPath := common.CheckPathType(sourcePath)
+	if isWinPath == true {
+		imageFileName, sourcePathOnly = common.FileNamePathFromWin(sourcePath)
+	} else {
+		imageFileName, sourcePathOnly = common.FileNamePathFromLnx(sourcePath)
+	}
+
+	imageName := common.ParseFilenameForImageName(imageFileName)
+
+	items, _ := os.ReadDir(sourcePathOnly)
+
+	fileTypes = []string{".ovf", ".mf"}
+	for _, ft := range fileTypes {
+		// Construct filename to check for
+		fileName = imageName + ft
+
+		// If file exists, add to copy list
+		for _, item := range items {
+			if item.Name() == fileName {
+				fileList = append(fileList, item.Name())
+			}
+		}
+	}
+
+	// Check for and add associated disk files
+	for i := 1; i < 15; i++ {
+		strI = strconv.Itoa(i)
+		fileName = imageName + "-disk" + strI + ".vmdk"
+
+		for _, item := range items {
+			if item.Name() == fileName {
+				fileList = append(fileList, item.Name())
+			}
+		}
+	}
+
+	if len(fileList) == 0 {
+		err := errors.New("No file found called: " + fileName + " in source directory: " + sourcePathOnly)
+		return fileList, err 
+	}
+    return fileList, nil
+}
 
 func SetPathsFromDownloadUri(outputDir, downloadUri string) (string, string, string) {
 	common.LogTxtHandler().Info(">>>>>>> Setting Source and Target Paths for Conversion.....")
@@ -263,7 +316,7 @@ func RegisterVm(token, vcServer, dcName, vmPathName, imageName, folderId, resPoo
 	// Ensure local paths are escaped properly (ex: C:\\lab\\file.vmx)
 func ConvertOvfaToVmx(inputPath, outputPath string) string {
 	var cmd *exec.Cmd
-	var ovaMatched, ovfMatched, vmxMatched bool
+	var ovaMatched, ovfMatched bool
 
 	inputPath = strings.ToLower(inputPath)                   // Ex: e:\\lab-servs\\image1234.ova
 	outputPath = strings.ToLower(outputPath)				 // Ex: e:\\lab-servs\\image1234.vmx
@@ -279,16 +332,6 @@ func ConvertOvfaToVmx(inputPath, outputPath string) string {
 	}
 	if err != nil {
 		common.LogTxtHandler().Error("Unable to search for OVA/OVF string.")
-	}
-	
-	// Ensure output is a VMX file
-	vmxMatched, err = regexp.MatchString("vmx", outputPath)
-	if vmxMatched == false {
-		common.LogTxtHandler().Error("Error: Output does not include a VMX file path.")
-		common.LogTxtHandler().Error("Please provide the full destination file path to the resulting VMX file.") 	
-	}
-	if err != nil {
-		common.LogTxtHandler().Error("Unable to search for VMX string.")
 	}
 	
 	ovfCmd := "ovftool " + inputPath + " " + outputPath								// Ex:  ovftool e:\\lab-servs\\image1234.ova e:\\lab-servs\\image1234.vmx

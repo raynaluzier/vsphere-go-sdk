@@ -100,6 +100,35 @@ Takes in the full path to the file and renames it to the new file path. This fun
 | (result) | Returns either "Failed" or "Success" | string  |
 
 
+## CheckDirAndCreate
+Takes in the full path to the desired directory structure and sees if it exists. If the directory doesn't exist, it will create it. It will then check to see if the directory was successfully created and log either success or failure of the creation.
+
+#### Inputs
+| Name     | Description                                       | Type     | Required |
+|----------|---------------------------------------------------|----------|:--------:|
+| dirPath  | Directory path to check and create, if necessary  | string   | TRUE     |
+
+#### Outputs
+| Name     | Description                         | Type    |
+|----------|-------------------------------------|---------|
+| (result) | Returns "Completed directory check" | string  |
+
+
+## MoveFiles
+Takes in source and destination directories as well as a list of files to move. It will first call `CheckDirAndCreate` to ensure the destination directory actually exists, and create it if necessary. Next, for each file in the list, it will form the source and destation file paths with file name (ex: souce: E:\\Lab\\myfile.txt, dest: E:\\Lab\\folder\\myfile.txt), and then it will move the file to the destination.
+
+#### Inputs
+| Name      | Description                                          | Type     | Required |
+|-----------|------------------------------------------------------|----------|:--------:|
+| fileList  | List of files to be moved                            | []string | TRUE     |
+| sourceDir | Directory path where the files will be sourced from  | string   | TRUE     |
+| destDir   | Directory path where the files will be moved to      | string   | TRUE     |
+
+#### Outputs
+
+No outputs.
+
+
 ## GetFileType
 Takes in the path to a file and extracts the file extension. The file extension (without leading ".") is then returned. 
 

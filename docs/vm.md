@@ -1,5 +1,25 @@
 # VM Functions
 
+## SetOvfFileList
+Takes in the full path to the image file including the filename where the OVF files currently reside. This function determines the expected files based on the OVF file type and image name, verifies the existance of the file in the source path, and if it exists, the file is added to a list. This list is consumed by the `MoveFiles` function prior to the `ConvertImageByType` function.
+
+When the OVF files are converted to VMX, the disk(s) that is created as a result is the same name as what's part of the OVF file package. Since we are placing the converted image files in the same directory as they were downloaded and later imported from, we must first move the OVF files into their own subdirectory called 'ovf_files' and the conversion run from there. This will prevent any file conflicts.
+
+This is not a problem with OVA or VMTX files.
+
+#### Inputs
+| Name       | Description                                                                                            | Type     | Required |
+|------------|--------------------------------------------------------------------------------------------------------|----------|:--------:|
+| sourcePath | Current, full path to the OVF image file, including the filename (usually same as download directory)  | string   | TRUE     |
+
+
+#### Outputs
+| Name     | Description                                  | Type     |
+|----------|----------------------------------------------|----------|
+| fileList | List of standard OVF files to be moved       | string   |
+| err      | Resulting error if the file cannot be found  | string   |
+
+
 ## SetPathsFromDownloadUri
 This function is called when the `import_no_download` flag is set to FALSE; meaning the image artifacts are downloaded prior to conversion and import into vCenter.
 

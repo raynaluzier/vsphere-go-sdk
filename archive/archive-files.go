@@ -92,7 +92,7 @@ func MakeFileCopyList(sourceDir, imageName, imageType, fileSuffix string) ([]str
 			if fileSuffix != "" {
 				fileName = imageName + "-" + fileSuffix + "-disk-" + strI + ".vmdk"
 			} else {
-				fileName = imageName + "-disk-" + strI + ".vmdk"
+				fileName = imageName + "-disk" + strI + ".vmdk"
 			}
 
 			for _, item := range items {

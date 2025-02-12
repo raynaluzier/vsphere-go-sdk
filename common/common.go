@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -161,6 +162,45 @@ func RenameFile(oldFilePath, newFilePath string) string {
     } else {
 		return "Success"
 	}
+}
+
+func CheckDirAndCreate(dirPath string) string {
+	_, err := os.Stat(dirPath)
+
+    if os.IsNotExist(err) {
+        os.Mkdir(dirPath, os.ModePerm)
+
+		// Make sure the directory was created successfully
+        _, err = os.Stat(dirPath)
+        if err != nil {
+            log.Fatalf("Failed to create directory: %v", err)
+        } else {
+            log.Println("Directory created successfully!")
+        }
+    } else {
+        log.Println("Directory already exists.")
+    }
+    return "Completed directory check"
+}
+
+func MoveFiles(fileList []string, sourceDir, destDir string) error {
+	// Check for the target dir, if it doesn't exist, create it
+	result := CheckDirAndCreate(destDir)
+    log.Println(result)
+
+    for _, file := range fileList {
+        fileName := filepath.Base(file)
+		// Set dest and source paths with filename
+        destPath := filepath.Join(destDir, fileName)
+        sourcePath := filepath.Join(sourceDir, fileName)      
+
+		// Move the file
+        err := os.Rename(sourcePath, destPath)
+        if err != nil {
+            return fmt.Errorf("Failed to move file %s: %w", file, err)
+        }
+    }
+    return nil
 }
 
 func GetFileType(filePath string) string {
