@@ -59,7 +59,7 @@ The function takes in the source path which includes the filename and extension 
 For example:  sourcePath = "E:\lab-servs\win2022\win2022.ova"
 * This is the same `sourcePath` that will be passed to the conversion process in function `ConvertImageByType`.
 * We'll strip off 'win2022\win2022.ova' so the `targetPath` we will use is "E:\lab-servs". When the conversion runs, it will automatically place the converted image files in "E:\lab-servs\win2022\" so all of the image files are in the same directory.
-* If for some reason you are using a non-typical pathing scheme (for example: E:\path\somefolder\somefile.ova), we will detect this and pass 'E:\lab-servs' as the target path. **However, the OVFTOOL will place the converted files into 'E:\lab-servs\somefile\' instead automatically. So you will have the source files in 'E:\path\somefolder\' and the converted files in 'E:\lab-servs\somefile\'. This is a function of the OVFTOOL outside of our control that cannot be changed.** 
+* If for some reason you are using a non-typical pathing scheme (for example: E:\lab-servs\testing\somefile.ova), we will detect this and pass 'E:\lab-servs\testing' as the target path. **However, the OVFTOOL will place the converted files into 'E:\lab-servs\testing\somefile\' instead automatically. So you will have the source files in 'E:\lab-servs\testing\' AND the converted files in 'E:\lab-servs\testing\somefile\'. This is a function of the OVFTOOL outside of our control that cannot be changed.** 
 
 --> For VMTX files, the `sourcePath` is the same. However, the `targetPath` used is the same as the sourcepath except the file extension is 'VMX' here. VMTX files use the `RenameFile` function instead during the conversion process.
 
@@ -103,19 +103,23 @@ Takes in the image's file type, source directory where the current image file(s)
 
 
 ## SetVmPathName
-Takes in the 'sourcePath' that's a result of `SetPathsFromDownloadUri` or as a direct input if the 'import_no_download' flag is set to TRUE. The 'sourcePath' would be something like "E:\\labimage\\labimage.ova" or "/labimage/labimage.ova". This function also takes in the datastore name (dsName).
+Takes in 'path' which is the full file path to the image file being imported into vCenter. If this is being called after downloading image files from Artifactory (where the `import_no_download` flag is set to FALSE), then path in this case would be the same as the `outputDir` + \imagename\imagename.ext (ex: "E:\\lab\\labimage\\labimage.ova" or "/lab/labimage/labimage.ova"). Once the image conversion happens, the resulting files should be in the same directory. Therefore, we'll simply take in this string path and rename the file extension to ".vmx". 
 
-Since the VMX files are assumed to be in the same directory as the originally downloaded images files, the sourcePath is reformatted to create the `vmPathName` that will be used by the `RegisterVm` function as the datastore path. The OS-platform, taken by the source path formatting, is taken into account. 
+If the `import_no_download` flag is set to TRUE, then the resulting file path after image conversion is used. In this case it would look like "E:\\lab\\labimage\\labimage.vmx" for a Windows path.
 
-For example: sourcePath = "E:\\labimage\\labimage.ova" and dsName = "lab-servs". The result of this function would be:  vmPathName = "[lab-servs] labimage/labimage.vmx".
+This function also takes in the datastore name (dsName).
 
-Likewise, sourcePath = "E:\\windows-servers\\labimage22\\labimage22.ova" and dsName = "lab-servs". The result of this function would be:  vmPathName = "[lab-servs] windows-servers/labimage/labimage.vmx".
+Next, the path is reformatted to create the `vmPathName` that will be used by the `RegisterVm` function as the datastore path. The OS-platform, taken by the source path formatting, is taken into account. 
+
+For example: path = "E:\\lab\\labimage\\labimage.ova" and dsName = "lab-servs". The result of this function would be:  vmPathName = "[lab-servs] labimage/labimage.vmx".
+
+Likewise, path = "E:\\windows-servers\\labimage22\\labimage22.vmx" and dsName = "lab-servs". The result of this function would be:  vmPathName = "[lab-servs] windows-servers/labimage22/labimage22.vmx".
 
 #### Inputs
-| Name       | Description                                                                                        | Type     | Required |
-|------------|----------------------------------------------------------------------------------------------------|----------|:--------:|
-| sourcepath | Full directory path with filename of the source image file(s) (before conversion; OVA, OVF, VMTX)  | string   | TRUE     |
-| dsName     | Name of the datastore where the image files reside                                                 | string   | TRUE     |
+| Name    | Description                                                                                    | Type     | Required |
+|---------|------------------------------------------------------------------------------------------------|----------|:--------:|
+| path    | Full directory path with filename of the source image file(s) (can be OVA, OVF, VMTX, or VMX)  | string   | TRUE     |
+| dsName  | Name of the datastore where the image files reside                                             | string   | TRUE     |
 
 #### Outputs
 | Name        | Description                                                                               | Type     |

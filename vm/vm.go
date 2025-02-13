@@ -143,9 +143,8 @@ func SetPathNoDownload(sourcePath string) string {
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
 			} else {  // ova or ovf
-				file, parentDir := common.GetBaseImagePathWin(sourcePath)	// Ex: G:\\this\\path\\somefolder\\somefile.ovf, returns: somefile.ovf, somefolder
-				altPath := parentDir + "\\" + file							// returns: somefolder\\somefile.ovf
-				targetPath = strings.TrimSuffix(sourcePath, altPath)		// returns: G:\\this\\path\\
+				file, _ := common.GetBaseImagePathWin(sourcePath)	    // Ex: G:\\this\\path\\somefolder\\somefile.ovf, returns: somefile.ovf
+				targetPath = strings.TrimSuffix(sourcePath, file)		// returns: G:\\this\\path\\somefolder\\
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
 			}
@@ -178,9 +177,8 @@ func SetPathNoDownload(sourcePath string) string {
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
 			} else {  // ova or ovf
-				file, parentDir := common.GetBaseImagePathLnx(sourcePath)	// Ex: /this/path/somefolder/somefile.ovf, returns: somefile.ovf, somefolder
-				altPath := parentDir + "/" + file							// returns: somefolder/somefile.ovf
-				targetPath = strings.TrimSuffix(sourcePath, altPath)		// returns: /this/path/
+				file, _ := common.GetBaseImagePathLnx(sourcePath)	    // Ex: /this/path/somefolder/somefile.ovf, returns: somefile.ovf
+				targetPath = strings.TrimSuffix(sourcePath, file)		// returns: /this/path/somefolder/
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
 			}
@@ -213,19 +211,25 @@ func ConvertImageByType(fileType, sourcePath, targetPath string) string {
 }
 
 // we need to account for no download option...
-func SetVmPathName(sourcePath, dsName string) string {
-	// 'sourcePath' comes from result of SetPathsFromDownloadUri; we're using this to form the vmPathName, which should match the
-	// resulting target path during the image conversion process --> Example: E:\\labimage\\labimage.ova
-	isWinPath := common.CheckPathType(sourcePath)			// E:\\labimage\\labimage.ova --> true
+func SetVmPathName(path, dsName string) string {
+	// 'path' is the full file path to the image file being imported to vCenter
+	var vmPathName string
+	isWinPath := common.CheckPathType(path)			     // E:\\labimage\\labimage.ova --> true
+	ext := common.GetFileType(path)               // extension without leading '.', example 'ova'
 
 	if isWinPath == true {
-		noLetterPath := common.TrimDriveLetter(sourcePath)	// returns: labimage\\labimage.ova	
-		sourcePath = common.SwapSlashes(noLetterPath)		// returns: labimage/labimage.ova
+		noLetterPath := common.TrimDriveLetter(path)	// returns: labimage\\labimage.ova	
+		path = common.SwapSlashes(noLetterPath)		    // returns: labimage/labimage.ova
+	} else {
+		path = strings.TrimPrefix(path, "/")			// trim leading slash for linux
 	}
 
-	ext := common.GetFileType(sourcePath)             // extension without leading '.', example 'ova'
-	path := strings.TrimSuffix(sourcePath, ext)  	  // returns:  labimage/labimage.
-	vmPathName := "[" + dsName + "] " + path + "vmx"  // returns:  [datastore] labimage/labimage.vmx
+	if ext != "vmx" {
+		path = strings.TrimSuffix(path, ext)  	  // returns:  labimage/labimage.
+		vmPathName = "[" + dsName + "] " + path + "vmx"  // returns:  [datastore] labimage/labimage.vmx
+	} else {
+		vmPathName = "[" + dsName + "] " + path          // returns:  [datastore] labimage/labimage.vmx
+	}
 	common.LogTxtHandler().Info("vmPathName is set to: " + vmPathName)
 	return vmPathName
 }
