@@ -131,9 +131,12 @@ func SetPathNoDownload(sourcePath string) string {
 				targetPath = trimmedPath + "vmx"					      // returns: E:\\Lab\\win22\\win22.vmx
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
-			} else {  // ova or ovf
+			} else if fileType == "ova" || fileType == "ovf" {  // ova or ovf
 				targetPath = strings.TrimSuffix(sourcePath, checkPath)    // Ex: 'E:\\Lab\\win22\\win22.ova', returns: 'E:\\Lab\\'
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
+				return targetPath
+			} else {  // vmx, nothing needs done
+				targetPath = sourcePath
 				return targetPath
 			}
 		} else {
@@ -142,10 +145,13 @@ func SetPathNoDownload(sourcePath string) string {
 				targetPath = trimmedPath + "vmx"							// returns: G:\\this\\path\\somefolder\\somefile.vmx
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
-			} else {  // ova or ovf
+			} else if fileType == "ova" || fileType == "ovf" {  // ova or ovf
 				file, _ := common.GetBaseImagePathWin(sourcePath)	    // Ex: G:\\this\\path\\somefolder\\somefile.ovf, returns: somefile.ovf
 				targetPath = strings.TrimSuffix(sourcePath, file)		// returns: G:\\this\\path\\somefolder\\
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
+				return targetPath
+			} else {  // vmx, nothing needs done
+				targetPath = sourcePath
 				return targetPath
 			}
 		}
@@ -166,8 +172,11 @@ func SetPathNoDownload(sourcePath string) string {
 				targetPath = trimmedPath + "vmx"					        // returns: /lab/rhel9/rhel9.vmx
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
-			} else {	// ova or ovf
+			} else if fileType == "ova" || fileType == "ovf" {	// ova or ovf
 				targetPath = strings.TrimSuffix(sourcePath, checkPath)	    // Ex: '/lab/rhel9/rhel9.ova', returns: '/lab/'
+				return targetPath
+			} else {  // vmx, nothing needs done
+				targetPath = sourcePath
 				return targetPath
 			}
 		} else {  // if some other path was used
@@ -176,10 +185,13 @@ func SetPathNoDownload(sourcePath string) string {
 				targetPath = trimmedPath + "vmx"							// returns: /this/path/somefolder/somefile.vmx
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
-			} else {  // ova or ovf
+			} else if fileType == "ova" || fileType == "ovf" {  // ova or ovf
 				file, _ := common.GetBaseImagePathLnx(sourcePath)	    // Ex: /this/path/somefolder/somefile.ovf, returns: somefile.ovf
 				targetPath = strings.TrimSuffix(sourcePath, file)		// returns: /this/path/somefolder/
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
+				return targetPath
+			} else {  // vmx, nothing needs done
+				targetPath = sourcePath
 				return targetPath
 			}
 		}
