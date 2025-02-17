@@ -224,7 +224,7 @@ func SetVmPathName(path, dsName string) string {
 		path = strings.TrimPrefix(path, "/")			// trim leading slash for linux
 	}
 
-	if ext != "vmx" {
+	if ext == "ova" || ext == "ovf" {
 		path = strings.TrimSuffix(path, ext)  	  // returns:  labimage/labimage.
 		vmPathName = "[" + dsName + "] " + path + "vmx"  // returns:  [datastore] labimage/labimage.vmx
 	} else {
