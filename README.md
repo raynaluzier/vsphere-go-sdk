@@ -41,6 +41,11 @@ This is a list of the global variables used within this SDK. As with any Go pack
 ### VM
 These functions are related to VM-related operations such as converting from OVA/OVF to VMX, converting VMX to OVA/OVF, registering a VM in vCenter (we also refer to this as 'importing' within this SDK), and checking the image's file type from the primary download URI (from Artifactory) provided, and either converting it or renaming it in preparation for importing into vCenter.
 
+### Tasks
+These functions are larger operations that first set the global variables, and then make a series of function calls to perform specific activities. They were created in support of a custom Packer plugin to streamline passing environment-specific variables, such as the vCenter credentials, server, logging, and output directory. Rather than passing one or more of these to every function in the SDK (in addition to the required inputs), they are passed in ONCE to the desired function, the global variables are set, and then they are used automatically when calling each sub-function without having to pass them in over and over.
+
+These larger tasks also group the targeted functions of a desired behavior into a single operation and keep the plugin code to a minimum and simplify performing that desired behavior behind the scenes.
+
 ### Archive
 Archive also exists as a package, but it's really just a place to hold potentially useful functions that were created but have no immediate use. Artifacts are split into archive files that match their associated behaviors; as of now, either the `archive-ssh-auths.go` or `archive-files.go` files. 
 
@@ -54,3 +59,4 @@ A reference outline of each function's behavior and any special notes can be fou
 - [Common](https://github.com/raynaluzier/vsphere-go-sdk/blob/main/docs/common.md)
 - [Govmomi](https://github.com/raynaluzier/vsphere-go-sdk/blob/main/docs/govmomi.md)
 - [VM](https://github.com/raynaluzier/vsphere-go-sdk/blob/main/docs/vm.md)
+- [Tasks](https://github.com/raynaluzier/vsphere-go-sdk/blob/main/docs/tasks.md)
