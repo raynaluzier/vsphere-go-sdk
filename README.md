@@ -27,7 +27,7 @@ Using .env File: Configure the `.env` file with vCenter credentials, vCenter ser
 Then use `os.Getenv` to set `util.VcServer`, `util.VcUser`, `util.VcPasword`, `util.OutputDir`, and `util.Logging` respectively.
 
 ## About
-This SDK is broken into several packages: `common`, `govmomi`, `vm`, and `util` based on the underlying behavior of the functions. Some functions are specifically related to certain behaviors or package sources so they have been grouped together into functional packages as described below.
+This SDK is broken into several packages: `common`, `govmomi`, `vm`, `tasks`, and `util` based on the underlying behavior of the functions. Some functions are specifically related to certain behaviors or package sources so they have been grouped together into functional packages as described below.
 
 ### Common
 These functions perform small, generalized supporting tasks for the other focused modules. These functions can be found under the `common.go` file.
