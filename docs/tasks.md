@@ -10,7 +10,6 @@ Takes in a variety of required vCenter-related inputs to get and return the reso
 | vcUser      | Username of the vCenter account that will be performing the operations (ex: jdoe@domain.com)`| string   | TRUE     |
 | vcPass      | Password for the provided vCenter account                                                    | string   | TRUE     |
 | vcServer    | FQDN or IP address of the target vCenter server                                              | string   | TRUE     |
-| logLevel    | Level of logging that should be output; default is 'INFO'                                    | string   | TRUE     |
 | dcName      | Name of the target datacenter in vCenter; will use default datacenter if blank               | string   | FALSE    |
 | folderName  | Name of the target folder in vCenter; will use default root folder if blank                  | string   | FALSE    |
 | resPoolName | Name of the target resource pool in vCenter; will use default pool if blank                  | string   | FALSE    |
@@ -37,7 +36,6 @@ The result of this process is returned as a string status of either "Success" or
 | vcUser      | Username of the vCenter account that will be performing the operations (ex: jdoe@domain.com)`           | string   | TRUE     |
 | vcPass      | Password for the provided vCenter account                                                               | string   | TRUE     |
 | vcServer    | FQDN or IP address of the target vCenter server                                                         | string   | TRUE     |
-| logLevel    | Level of logging that should be output; default is 'INFO'                                               | string   | TRUE     |
 | outputDir   | Properly escaped directory to where image files were be downloaded (without the image named sub-folder) | string   | TRUE     |
 | downloadUri | Artifactory download URI address for the image (OVA, OVF, or VMTX)                                      | string   | TRUE     |
 | dcName      | Name of the target datacenter in vCenter                                                                | string   | TRUE     |
@@ -71,7 +69,6 @@ The result of this process is returned as a string status of either "Success" or
 | vcUser      | Username of the vCenter account that will be performing the operations (ex: jdoe@domain.com)`| string   | TRUE     |
 | vcPass      | Password for the provided vCenter account                                                    | string   | TRUE     |
 | vcServer    | FQDN or IP address of the target vCenter server                                              | string   | TRUE     |
-| logLevel    | Level of logging that should be output; default is 'INFO'                                    | string   | TRUE     |
 | dcName      | Name of the target datacenter in vCenter                                                     | string   | TRUE     |
 | dsName      | Name of the target datastore in vCenter                                                      | string   | TRUE     |
 | sourcePath  | Properly escaped datastore directory where the image files reside                            | string   | TRUE     |

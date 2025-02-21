@@ -10,11 +10,10 @@ import (
 	"github.com/raynaluzier/vsphere-go-sdk/vm"
 )
 
-func GetResourceIds(vcUser, vcPass, vcServer, logLevel, dcName, folderName, resPoolName, clusterName string) (string, string, error) {
+func GetResourceIds(vcUser, vcPass, vcServer, dcName, folderName, resPoolName, clusterName string) (string, string, error) {
 	util.VcUser     = vcUser
 	util.VcPassword = vcPass
 	util.VcServer   = vcServer
-	util.Logging    = logLevel
 
 	common.LogTxtHandler().Info("Getting resource IDs for target vSphere folder and resource pool...")
 
@@ -38,11 +37,10 @@ func GetResourceIds(vcUser, vcPass, vcServer, logLevel, dcName, folderName, resP
 	return folderId, resPoolId, nil
 }
 
-func ConvertImportFromDownload(vcUser, vcPass, vcServer, logLevel, outputDir, downloadUri, dcName, dsName, imageName, folderId, resPoolId string) string {
+func ConvertImportFromDownload(vcUser, vcPass, vcServer, outputDir, downloadUri, dcName, dsName, imageName, folderId, resPoolId string) string {
 	util.VcUser     = vcUser
 	util.VcPassword = vcPass
 	util.VcServer   = vcServer
-	util.Logging    = logLevel
 	util.OutputDir  = outputDir
 
 	vcToken := common.VcenterAuth(vcUser, vcPass, vcServer)
@@ -84,11 +82,10 @@ func ConvertImportFromDownload(vcUser, vcPass, vcServer, logLevel, outputDir, do
 	}
 }
 
-func ConvertImportNoDownload(vcUser, vcPass, vcServer, logLevel, dcName, dsName, sourcePath, folderId, resPoolId string) string {
+func ConvertImportNoDownload(vcUser, vcPass, vcServer, dcName, dsName, sourcePath, folderId, resPoolId string) string {
 	util.VcUser     = vcUser
 	util.VcPassword = vcPass
 	util.VcServer   = vcServer
-	util.Logging    = logLevel
 
 	vcToken := common.VcenterAuth(vcUser, vcPass, vcServer)
 
