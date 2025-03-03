@@ -351,7 +351,7 @@ func ConvertOvfaToVmx(inputPath, outputPath string) string {
 		common.LogTxtHandler().Error("Unable to search for OVA/OVF string.")
 	}
 	
-	ovfCmd := "ovftool " + inputPath + " " + outputPath								// Ex:  ovftool e:\\lab-servs\\image1234.ova e:\\lab-servs\\image1234.vmx
+	ovfCmd := "ovftool -tt=vmx " + inputPath + " " + outputPath								// Ex:  ovftool e:\\lab-servs\\image1234.ova e:\\lab-servs\\image1234.vmx
 	fmt.Println("OVF CMD: " + ovfCmd)
 
 	common.LogTxtHandler().Info("Beginning conversion process... This could take a while.")
