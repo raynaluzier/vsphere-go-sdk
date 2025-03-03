@@ -360,7 +360,7 @@ func ConvertOvfaToVmx(inputPath, outputPath string) string {
 		cmd = exec.Command("cmd", "/c", ovfCmd)
 	default: // mac & linux
 		fmt.Println("Running Linux shell...")
-		cmd = exec.Command(ovfCmd)   // mac "bash"
+		cmd = exec.Command("bash", ovfCmd)   // mac "bash"
 	}
 
 	cmd.Stdout = os.Stdout
