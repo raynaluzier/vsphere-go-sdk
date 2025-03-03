@@ -360,14 +360,14 @@ func ConvertOvfaToVmx(inputPath, outputPath string) string {
 		cmd = exec.Command("cmd", "/c", ovfCmd)
 	default: // mac & linux
 		fmt.Println("Running Linux shell...")
-		cmd = exec.Command("bash", ovfCmd)   // mac "bash"
+		cmd = exec.Command("bash", "-c", ovfCmd)
 	}
 
 	cmd.Stdout = os.Stdout
 
 	if err := cmd.Run(); err != nil {
 		common.LogTxtHandler().Error("Could not run the exec shell command.")
-		// if mac or linux, do we need to prefice cmd with "bash"?
+		common.LogTxtHandler().Error("Is the OVFTool installed on the machine executing this plugin?")
 		return "Failed"
 	} else {
 		return "Success"
