@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/raynaluzier/vsphere-go-sdk/common"
 )
@@ -370,6 +371,7 @@ func ConvertOvfaToVmx(inputPath, outputPath string) string {
 		common.LogTxtHandler().Error("Is the OVFTool installed on the machine executing this plugin?")
 		return "Failed"
 	} else {
+		time.Sleep(3 * time.Second)
 		return "Success"
 	}
 }
