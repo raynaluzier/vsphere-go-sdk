@@ -180,7 +180,7 @@ func SetPathNoDownload(sourcePath string) string {
 				targetPath = sourcePath
 				return targetPath
 			}
-		} else {  // if some other path was used
+		} else {  // if some other path was used							
 			if fileType == "vmtx" {
 				trimmedPath := strings.TrimSuffix(sourcePath, "vmtx")		// Ex: /this/path/somefolder/somefile.vmtx, returns: /this/path/somefolder/somefile.
 				targetPath = trimmedPath + "vmx"							// returns: /this/path/somefolder/somefile.vmx
@@ -413,7 +413,7 @@ func ConvertVmxToOvfa(inputPath, outputPath string) string {
 	case "windows":
 		cmd = exec.Command("cmd", "/c", ovfCmd)
 	default: // mac & linux
-		cmd = exec.Command(ovfCmd)   // mac "bash"
+		cmd = exec.Command("bash", "-c", ovfCmd)
 	}
 
 	cmd.Stdout = os.Stdout

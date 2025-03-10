@@ -30,6 +30,21 @@ Using this information, we'll get the required authentication token from vCenter
 
 The result of this process is returned as a string status of either "Success" or "Failed".
 
+--- NOTES -------------------------------------------
+Prior to checking if the image files need to be converted to VMX, the existance of the files are first validated in the provided source_path. This source path should be a datastore, and someplace accessible from the system running Packer. However, additional directory pathing may exist (usually in the case of mount points on Linux) that don't actually exist in the datastore's path. 
+	
+For example, let's say we have a NAS with a share called 'Work' that we have mounted as a datastore in vCenter. We want to import an Ubunutu 20 image called "UB20". If we browse the 'Work' datastore from vCenter, the UB20 image would typically be located in a folder called "UB20". Assuming the image has already been converted to VMX format...
+	
+Running Packer from a Windows box, we have a drive mapped to the 'Work' NAS share, so the path to the image VMX would look something like G:\UB20\UB20.vmx. The plugin process recognizes this and trims off the leading drive letter for Windows, and formats it appropriately for the vmPathName for vCenter to use in the import process, which is successful.
+	
+However, when running Packer from a Linux box, we have a mount point to the NAS share at /mnt/work, so the path to the image VMX would now look like /mnt/work/UB20/UB20.vmx. If we use this path to build the vmPathName that vCenter uses, it wouldn't be able to find '/mnt/work' because it doesn't actually exist on the datastore (it's only on the Packer system), so it would cause the import into vCenter to fail. Furthermore, this leading path can vary in location, length, and structure depending on individual preferences and organization needs, so handling this in an automated way would be impossible.
+	
+So in cases where additional pathing exists on the source that doesn't actually exist on the datastore (similar to the situation described in the example above), specify the source_path (/mnt/work/UB20/UB20.ova) as the path to the image file where Packer sees it, and then specify the `ds_image_path` as the image path without the mount point information as the datastore sees it. 
+	
+So if you have mounted a share to your datastore at /shared/servers and the path on the datastore is /dev/rhel9/rhel9.ovf, the inputs would look like this:
+	source_path   = "/shared/servers/dev/rhel9/rhel9.ovf"       <--- This is how Packer gets to it
+	ds_image_path = "/dev/rhel9/rhel9.ovf"                      <--- This is how vCenter gets to it via the mounted datastore
+
 #### Inputs
 | Name        | Description                                                                                             | Type     | Required |
 |-------------|---------------------------------------------------------------------------------------------------------|----------|:--------:|
@@ -39,7 +54,8 @@ The result of this process is returned as a string status of either "Success" or
 | outputDir   | Properly escaped directory to where image files were be downloaded (without the image named sub-folder) | string   | TRUE     |
 | downloadUri | Artifactory download URI address for the image (OVA, OVF, or VMTX)                                      | string   | TRUE     |
 | dcName      | Name of the target datacenter in vCenter                                                                | string   | TRUE     |
-| dsName      | Name of the target datastore in vCenter                                                                 | string   | TRUE     | 
+| dsName      | Name of the target datastore in vCenter                                                                 | string   | TRUE     |
+| dsImagePath | Usually for Linux paths; datastore path to image without mount point path from Packer server            | string   | FALSE    |
 | imageName   | Name of the image; i.e. the image file without the extension                                            | string   | TRUE     |
 | folderId    | Resource ID of the target vCenter folder                                                                | string   | TRUE     |
 | resPoolId   | Resource ID of the target vCenter resource pool                                                         | string   | TRUE     |
@@ -63,6 +79,22 @@ If the conversion process succeeds, the `vmPathName` is set, the VMX will be imp
 
 The result of this process is returned as a string status of either "Success" or "Failed".
 
+--- NOTES -------------------------------------------
+Prior to checking if the image files need to be converted to VMX, the existance of the files are first validated in the provided source_path. This source path should be a datastore, and someplace accessible from the system running Packer. However, additional directory pathing may exist (usually in the case of mount points on Linux) that don't actually exist in the datastore's path. 
+	
+For example, let's say we have a NAS with a share called 'Work' that we have mounted as a datastore in vCenter. We want to import an Ubunutu 20 image called "UB20". If we browse the 'Work' datastore from vCenter, the UB20 image would typically be located in a folder called "UB20". Assuming the image has already been converted to VMX format...
+	
+Running Packer from a Windows box, we have a drive mapped to the 'Work' NAS share, so the path to the image VMX would look something like G:\UB20\UB20.vmx. The plugin process recognizes this and trims off the leading drive letter for Windows, and formats it appropriately for the vmPathName for vCenter to use in the import process, which is successful.
+	
+However, when running Packer from a Linux box, we have a mount point to the NAS share at /mnt/work, so the path to the image VMX would now look like /mnt/work/UB20/UB20.vmx. If we use this path to build the vmPathName that vCenter uses, it wouldn't be able to find '/mnt/work' because it doesn't actually exist on the datastore (it's only on the Packer system), so it would cause the import into vCenter to fail. Furthermore, this leading path can vary in location, length, and structure depending on individual preferences and organization needs, so handling this in an automated way would be impossible.
+	
+So in cases where additional pathing exists on the source that doesn't actually exist on the datastore (similar to the situation described in the example above), specify the source_path (/mnt/work/UB20/UB20.ova) as the path to the image file where Packer sees it, and then specify the `ds_image_path` as the image path without the mount point information as the datastore sees it. 
+	
+So if you have mounted a share to your datastore at /shared/servers and the path on the datastore is /dev/rhel9/rhel9.ovf, the inputs would look like this:
+	source_path   = "/shared/servers/dev/rhel9/rhel9.ovf"       <--- This is how Packer gets to it
+	ds_image_path = "/dev/rhel9/rhel9.ovf"                      <--- This is how vCenter gets to it via the mounted datastore
+
+----------------------------------------------
 #### Inputs
 | Name        | Description                                                                                  | Type     | Required |
 |-------------|----------------------------------------------------------------------------------------------|----------|:--------:|
@@ -72,6 +104,7 @@ The result of this process is returned as a string status of either "Success" or
 | dcName      | Name of the target datacenter in vCenter                                                     | string   | TRUE     |
 | dsName      | Name of the target datastore in vCenter                                                      | string   | TRUE     |
 | sourcePath  | Properly escaped datastore directory where the image files reside                            | string   | TRUE     |
+| dsImagePath | Usually for Linux paths; datastore path to image without mount point path from Packer server | string   | FALSE    |
 | folderId    | Resource ID of the target vCenter folder                                                     | string   | TRUE     |
 | resPoolId   | Resource ID of the target vCenter resource pool                                              | string   | TRUE     |
 
