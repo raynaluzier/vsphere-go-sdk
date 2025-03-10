@@ -114,6 +114,14 @@ func ConvertImportFromDownload(vcUser, vcPass, vcServer, outputDir, downloadUri,
 			}
 		}
 
+		common.LogTxtHandler().Info("Image Filename: " + imageFileName)
+		common.LogTxtHandler().Info("Image Name: " + imageName)
+		common.LogTxtHandler().Info("File Type: " + fileType)
+		common.LogTxtHandler().Info("Source Path: " + sourcePath)
+		common.LogTxtHandler().Info("Target Path (before conversion): " + targetPath)
+		common.LogTxtHandler().Info("Source Folder Path: " + sourceFolderPath)
+		common.LogTxtHandler().Info("Post Conversion Target Path: " + postConvTargetPath)
+
 		// If this is an OVF image, we need to first move the image files into a sub dir called "ovf_files" and update the conversion source path to here
 		// If not, we'll get a file conflict with the disk file(s)
 		if fileType == "ovf" {
@@ -167,9 +175,13 @@ func ConvertImportFromDownload(vcUser, vcPass, vcServer, outputDir, downloadUri,
 				}
 			} else {
 				common.LogTxtHandler().Info("Datastore image pathing set; using this to set vmPathName...")
-				vmPathName = vm.SetVmPathName(dsImagePath, dsName)
-				// dsImagePath = /ub24/ub24.vmx
-				// vmPathName = [dsName] ub24/ub24.vmx
+				dsImagePath = common.CheckAddSlashToPath(dsImagePath)   // Ex: /dev-servers/
+				dsImagePath = dsImagePath + imageName					// Ex: /dev-servers/ub24
+				dsImagePath = common.CheckAddSlashToPath(dsImagePath)   // Ex: /dev-servers/ub24/
+				dsImagePath = dsImagePath + imageFileName				// Ex: /dev-servers/ub24/ub24.ovf
+				vmPathName = vm.SetVmPathName(dsImagePath, dsName)		// Will rename file in path to be VMX
+				// dsImagePath = /dev-servers/ub24/ub24.vmx
+				// vmPathName = [dsName] dev-servers/ub24/ub24.vmx
 			}
 
 			common.LogTxtHandler().Info("Beginning import into vCenter....")
@@ -257,8 +269,6 @@ func ConvertImportNoDownload(vcUser, vcPass, vcServer, dcName, dsName, sourcePat
 				postConvTargetPath = targetPath
 			}
 		}
-			
-		//fileType = common.GetFileType(imageFileName)
 
 		common.LogTxtHandler().Info("Image Filename: " + imageFileName)
 		common.LogTxtHandler().Info("Image Name: " + imageName)
@@ -311,7 +321,13 @@ func ConvertImportNoDownload(vcUser, vcPass, vcServer, dcName, dsName, sourcePat
 				}
 			} else {
 				common.LogTxtHandler().Info("Datastore image pathing set; using this to set vmPathName...")
-				vmPathName = vm.SetVmPathName(dsImagePath, dsName)
+				dsImagePath = common.CheckAddSlashToPath(dsImagePath)   // Ex: /dev-servers/
+				dsImagePath = dsImagePath + imageName					// Ex: /dev-servers/ub24
+				dsImagePath = common.CheckAddSlashToPath(dsImagePath)   // Ex: /dev-servers/ub24/
+				dsImagePath = dsImagePath + imageFileName				// Ex: /dev-servers/ub24/ub24.ovf
+				vmPathName = vm.SetVmPathName(dsImagePath, dsName)		// Will rename file in path to be VMX
+				// dsImagePath = /dev-servers/ub24/ub24.vmx
+				// vmPathName = [dsName] dev-servers/ub24/ub24.vmx
 			}
 
 			common.LogTxtHandler().Info("vmPathName: " + vmPathName)

@@ -51,7 +51,7 @@ So if you have mounted a share to your datastore at /shared/servers and the path
 | vcUser      | Username of the vCenter account that will be performing the operations (ex: jdoe@domain.com)`           | string   | TRUE     |
 | vcPass      | Password for the provided vCenter account                                                               | string   | TRUE     |
 | vcServer    | FQDN or IP address of the target vCenter server                                                         | string   | TRUE     |
-| outputDir   | Properly escaped directory to where image files were be downloaded (without the image named sub-folder) | string   | TRUE     |
+| outputDir   | Properly escaped directory to where image files will be downloaded (without the image named sub-folder) | string   | TRUE     |
 | downloadUri | Artifactory download URI address for the image (OVA, OVF, or VMTX)                                      | string   | TRUE     |
 | dcName      | Name of the target datacenter in vCenter                                                                | string   | TRUE     |
 | dsName      | Name of the target datastore in vCenter                                                                 | string   | TRUE     |
