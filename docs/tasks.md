@@ -39,7 +39,7 @@ Running Packer from a Windows box, we have a drive mapped to the 'Work' NAS shar
 	
 However, when running Packer from a Linux box, we typically have a mount point/share to the NAS share that might look something like /mnt/work, so the path to the image VMX would now look like /mnt/work/dev-servers/ub20/ub20.vmx. If we use this path to build the vmPathName that vCenter uses, it wouldn't be able to find '/mnt/work' because it doesn't actually exist on the datastore (it's only on the Packer side). So it would cause the import into vCenter to fail. Furthermore, this leading path can vary in location, length, and structure depending on individual preferences and organization needs, so handling this in an automated way would be impossible.
 	
-So in cases where additional pathing exists as part of the output directory seen by Packer that doesn't actually exist on the datastore itself (similar to the situation described in the example above), specify the output directory (/mnt/work/dev-servers/) as the folder structure as Packer sees it, and then specify the `dsImagePath` as the folder structure only as the datastore sees it (/dev-servers/). **This path should NOT include the image folder or image file itself as those will be added as part of the process.** 
+So in cases where additional pathing exists as part of the output directory seen by Packer that doesn't actually exist on the datastore itself (similar to the situation described in the example above), specify the output directory (/mnt/work/dev-servers/) as the folder structure as Packer sees it, and then specify the `dsImagePath` as the folder structure only as the datastore sees it (/dev-servers/). **This path should NOT include the image folder or image file itself as those will be added as part of the download process. Remember that the download process from Artifactory will place image files into their own image name-based folder.** 
 	
 So if you have mounted a share to your datastore at /shared/servers and the path on the datastore is /dev/rhel9/rhel9.ovf, the inputs would look like this:
 	outputDir   = "/mnt/work/dev-servers/"       <--- This is how Packer gets to it
@@ -88,11 +88,11 @@ Running Packer from a Windows box, we have a drive mapped to the 'Work' NAS shar
 	
 However, when running Packer from a Linux box, we typically have a mount point/share to the NAS share that might look something like /mnt/work, so the path to the image VMX would now look like /mnt/work/dev-servers/ub20/ub20.vmx. If we use this path to build the vmPathName that vCenter uses, it wouldn't be able to find '/mnt/work' because it doesn't actually exist on the datastore (it's only on the Packer side). So it would cause the import into vCenter to fail. Furthermore, this leading path can vary in location, length, and structure depending on individual preferences and organization needs, so handling this in an automated way would be impossible.
 	
-So in cases where additional pathing exists as part of the source path seen by Packer that doesn't actually exist on the datastore itself (similar to the situation described in the example above), specify the source path (/mnt/work/dev-servers/ub20/ub20.ova) as the path to the image file as Packer sees it, and then specify the `dsImagePath` as the folder structure only as the datastore sees it (/dev-servers/). **This path should NOT include the image folder or image file itself as those will be added automatically as part of the process.** 
+So in cases where additional pathing exists as part of the source path seen by Packer that doesn't actually exist on the datastore itself (similar to the situation described in the example above), specify the source path (/mnt/work/dev-servers/ub20/ub20.ovf) as the path to the image file as Packer sees it, and then specify the `dsImagePath` as the folder structure without the mount/share info just as the datastore sees it (/dev-servers/ub20/ub20.ovf). **This path SHOULD include the path to the image file itself.** 
 	
 So if you have mounted a share to your datastore at /mnt/work to the path on the datastore /dev-servers/ub20/ub20.ovf, the inputs would look like this:
 	sourcePath   = "/mnt/work/dev-servers/ub20/ub20.ovf"       <--- This is how Packer gets to it via a mount point/share
-	dsImagePath  = "/dev-servers/"                             <--- This is how vCenter gets to it via the mounted datastore
+	dsImagePath  = "/dev-servers/ub20/ub20.ovf"                <--- This is how vCenter gets to it via the datastore
 
 ----------------------------------------------
 #### Inputs
@@ -104,7 +104,7 @@ So if you have mounted a share to your datastore at /mnt/work to the path on the
 | dcName      | Name of the target datacenter in vCenter                                                                          | string   | TRUE     |
 | dsName      | Name of the target datastore in vCenter                                                                           | string   | TRUE     |
 | sourcePath  | Properly escaped datastore directory path to the image file (ex: "/mnt/work/dev-servers/ub20/ub20.ovf")           | string   | TRUE     |
-| dsImagePath | Usually for Linux paths; datastore path without image folder/file and without mount point path from Packer server | string   | FALSE    |
+| dsImagePath | Usually for Linux paths; datastore path to file, without mount/share info                                         | string   | FALSE    |
 | folderId    | Resource ID of the target vCenter folder                                                                          | string   | TRUE     |
 | resPoolId   | Resource ID of the target vCenter resource pool                                                                   | string   | TRUE     |
 

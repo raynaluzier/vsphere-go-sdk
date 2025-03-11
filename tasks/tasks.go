@@ -174,21 +174,15 @@ func ConvertImportFromDownload(vcUser, vcPass, vcServer, outputDir, downloadUri,
 				}
 			} else {
 				common.LogTxtHandler().Info("Datastore image pathing set; using this to set vmPathName...")
-				if fileType == "ova" || fileType == "ovf" {
-					// The ovftool automatically places the image files into an image name-based folder, so we account for that here
-					dsImagePath = common.CheckAddSlashToPath(dsImagePath)   // Ex: /dev-servers/
-					dsImagePath = dsImagePath + imageName					// Ex: /dev-servers/ub24
-					dsImagePath = common.CheckAddSlashToPath(dsImagePath)   // Ex: /dev-servers/ub24/
-					dsImagePath = dsImagePath + imageFileName				// Ex: /dev-servers/ub24/ub24.ovf
-					vmPathName = vm.SetVmPathName(dsImagePath, dsName)		// Will rename file in path to be VMX
-						// dsImagePath = /dev-servers/ub24/ub24.vmx
-						// vmPathName = [dsName] dev-servers/ub24/ub24.vmx
-				} else {
-					// No ovftool used here, so we leave vmtx/vmx files as is
-					dsImagePath = common.CheckAddSlashToPath(dsImagePath)
-					dsImagePath = dsImagePath + imageFileName
-					vmPathName = vm.SetVmPathName(dsImagePath, dsName)
-				}
+				// The download process puts the files into image name-based folder, so we account for that here
+				// dsImagePath is the output directory without mount/share info
+				dsImagePath = common.CheckAddSlashToPath(dsImagePath)   // Ex: /dev-servers/
+				dsImagePath = dsImagePath + imageName					// Ex: /dev-servers/ub24
+				dsImagePath = common.CheckAddSlashToPath(dsImagePath)   // Ex: /dev-servers/ub24/
+				dsImagePath = dsImagePath + imageFileName				// Ex: /dev-servers/ub24/ub24.ovf
+				vmPathName = vm.SetVmPathName(dsImagePath, dsName)		// Will rename file in path to be VMX
+					// dsImagePath = /dev-servers/ub24/ub24.vmx
+					// vmPathName = [dsName] dev-servers/ub24/ub24.vmx
 			}
 
 			common.LogTxtHandler().Info("Beginning import into vCenter....")
@@ -327,21 +321,8 @@ func ConvertImportNoDownload(vcUser, vcPass, vcServer, dcName, dsName, sourcePat
 				}
 			} else {
 				common.LogTxtHandler().Info("Datastore image pathing set; using this to set vmPathName...")
-				if fileType == "ova" || fileType == "ovf" {
-					// The ovftool automatically places the image files into an image name-based folder, so we account for that here
-					dsImagePath = common.CheckAddSlashToPath(dsImagePath)   // Ex: /dev-servers/
-					dsImagePath = dsImagePath + imageName					// Ex: /dev-servers/ub24
-					dsImagePath = common.CheckAddSlashToPath(dsImagePath)   // Ex: /dev-servers/ub24/
-					dsImagePath = dsImagePath + imageFileName				// Ex: /dev-servers/ub24/ub24.ovf
-					vmPathName = vm.SetVmPathName(dsImagePath, dsName)		// Will rename file in path to be VMX
-						// dsImagePath = /dev-servers/ub24/ub24.vmx
-						// vmPathName = [dsName] dev-servers/ub24/ub24.vmx
-				} else {
-					// No ovftool used here, so we leave vmtx/vmx files as is
-					dsImagePath = common.CheckAddSlashToPath(dsImagePath)
-					dsImagePath = dsImagePath + imageFileName
-					vmPathName = vm.SetVmPathName(dsImagePath, dsName)
-				}
+				// Files are already downloaded; dsImagePath should include path to file without mount/share info
+				vmPathName = vm.SetVmPathName(dsImagePath, dsName)
 			}
 
 			common.LogTxtHandler().Info("vmPathName: " + vmPathName)
