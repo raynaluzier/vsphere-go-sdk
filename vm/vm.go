@@ -88,7 +88,8 @@ func SetPathsFromDownloadUri(outputDir, downloadUri string) (string, string, str
 	var sourcePath, targetPath string
 	outputDir  = common.CheckAddSlashToPath(outputDir)
 	fileName  := common.ParseUriForFilename(downloadUri)
-	imageName := common.ParseFilenameForImageName(fileName)     // includes ending slash
+	imageName := common.ParseFilenameForImageName(fileName)
+	imageName = common.CheckAddSlashToPath(imageName)
 	fileType  := common.GetFileType(fileName)				 
 	sourcePath = outputDir + imageName + fileName				// E:\\Lab\\win2022\\win2022.ova
 
