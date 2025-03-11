@@ -46,7 +46,6 @@ func ConvertImportFromDownload(vcUser, vcPass, vcServer, outputDir, downloadUri,
 	var vmPathName, fileType, sourcePath, targetPath string
 	var imageFileName, sourceFolderPath, postConvTargetPath, convertResult, postConvTargetFilePath string
 
-	vcToken := common.VcenterAuth(vcUser, vcPass, vcServer)
 	// outputDir:   /mnt/servers										E:\\Lab\\win22
 	// downloadUri: https://art.server.com/repo/folder/ub20/ub20.ovf	https://art.server.com/repo/folder/win22/win22.ova
 
@@ -185,6 +184,7 @@ func ConvertImportFromDownload(vcUser, vcPass, vcServer, outputDir, downloadUri,
 			}
 
 			common.LogTxtHandler().Info("Beginning import into vCenter....")
+			vcToken := common.VcenterAuth(vcUser, vcPass, vcServer)
 			statusCode := vm.RegisterVm(vcToken, vcServer, dcName, vmPathName, imageName, folderId, resPoolId)
 			common.LogTxtHandler().Info("Status Code of Register VM task: " + statusCode)
 		
@@ -218,8 +218,6 @@ func ConvertImportNoDownload(vcUser, vcPass, vcServer, dcName, dsName, sourcePat
 	util.VcUser     = vcUser
 	util.VcPassword = vcPass
 	util.VcServer   = vcServer
-
-	vcToken := common.VcenterAuth(vcUser, vcPass, vcServer)
 
 	var imageFileName, sourceFolderPath, vmPathName, fileType, convertResult string
 	var postConvTargetPath, postConvTargetFilePath, imageName string
@@ -332,6 +330,8 @@ func ConvertImportNoDownload(vcUser, vcPass, vcServer, dcName, dsName, sourcePat
 
 			common.LogTxtHandler().Info("vmPathName: " + vmPathName)
 			common.LogTxtHandler().Info("Beginning import into vCenter....")
+
+			vcToken := common.VcenterAuth(vcUser, vcPass, vcServer)
 			statusCode := vm.RegisterVm(vcToken, vcServer, dcName, vmPathName, imageName, folderId, resPoolId)
 			common.LogTxtHandler().Info("Status Code of Register VM task: " + statusCode)
 	

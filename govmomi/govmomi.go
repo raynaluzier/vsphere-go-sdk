@@ -248,7 +248,8 @@ func MarkAsTemplate(user, pass, server, imageName, datacenterName string) (strin
 			common.LogTxtHandler().Info("Successfully converted " + imageName + " to a template.")
 			return "Success"
 		} else {
-			common.LogTxtHandler().Error("Error converting " + imageName + " to a template - ", err)
+			strErr := fmt.Sprintf("%v", err)
+			common.LogTxtHandler().Error("Error converting " + imageName + " to a template - " + strErr)
 			return "Failure"
 		}
 	} else if len(newVmList) == 0 {
