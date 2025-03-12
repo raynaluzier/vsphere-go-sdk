@@ -89,9 +89,13 @@ func SetPathsFromDownloadUri(outputDir, downloadUri string) (string, string, str
 	outputDir  = common.CheckAddSlashToPath(outputDir)
 	fileName  := common.ParseUriForFilename(downloadUri)
 	imageName := common.ParseFilenameForImageName(fileName)
-	imageName = common.CheckAddSlashToPath(imageName)
-	fileType  := common.GetFileType(fileName)				 
-	sourcePath = outputDir + imageName + fileName				// E:\\Lab\\win2022\\win2022.ova
+	fileType  := common.GetFileType(fileName)
+	isWinPath := common.CheckPathType(outputDir)
+	if isWinPath == true {
+		sourcePath = outputDir + imageName + "\\" + fileName  //E:\\Lab\\win2022\\win2022.ova
+	} else  {
+		sourcePath = outputDir + imageName + "/" + fileName
+	}
 
 	common.LogTxtHandler().Debug("Parsed Filename: " + fileName)
 	common.LogTxtHandler().Debug("Parsed Image Name: " + imageName)
@@ -99,9 +103,9 @@ func SetPathsFromDownloadUri(outputDir, downloadUri string) (string, string, str
 	common.LogTxtHandler().Debug("Source Path for Conversion: " + sourcePath)
 
 	if fileType == "vmtx" {
-		fileNoExt := strings.TrimSuffix(fileName, "vmtx")		// win2022.vmtx returns: win2022.
+		pathNoExt := strings.TrimSuffix(sourcePath, "vmtx")		// E:\\Lab\\win2022\\win2022.ova returns: E:\\Lab\\win2022\\win2022.  // was fileName
 		// targetPath used in rename
-		targetPath = outputDir + imageName + fileNoExt + "vmx"  // returns: E:\\Lab\\win2022\\win2022.vmx
+		targetPath = pathNoExt + "vmx"                          // returns: E:\\Lab\\win2022\\win2022.vmx  // was: outputDir + imageName + fileNoExt
 	} else {  // ova or ovf...
 		targetPath = outputDir									// E:\\Lab --> ovftool will dump files to:  E:\\Lab\\win2022\\[win2022 VMX files]
 	}

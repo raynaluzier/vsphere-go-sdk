@@ -55,7 +55,7 @@ func ConvertImportFromDownload(vcUser, vcPass, vcServer, outputDir, downloadUri,
 		// Example return:
 			// fileType:    ovf							ova								vmtx
 			// sourcePath:	/mnt/servers/ub20/ub20.ovf  E:\\Lab\\win22\\win22.ova		/mnt/server/ub24/ub24.vmtx
-			// targetPath:	/mnt/servers/				/mnt/servers/
+			// targetPath:	/mnt/servers/				E:\\Lab\\
 
 		common.LogTxtHandler().Info("File Type: " + fileType)			
 		common.LogTxtHandler().Info("Source Path: " + sourcePath)		

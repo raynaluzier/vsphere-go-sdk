@@ -1,16 +1,12 @@
 package main
 
 import (
-	_ "fmt"
-	_ "log"
 	"os"
-	_ "strings"
-
 	_ "github.com/raynaluzier/vsphere-go-sdk/common"
 	_ "github.com/raynaluzier/vsphere-go-sdk/govmomi"
-	_ "github.com/raynaluzier/vsphere-go-sdk/tasks"
 	"github.com/raynaluzier/vsphere-go-sdk/util"
 	_ "github.com/raynaluzier/vsphere-go-sdk/vm"
+	_ "github.com/raynaluzier/vsphere-go-sdk/tasks"
 	//"golang.org/x/crypto/ssh" // go get golang.org/x/crypto/ssh
 )
 
@@ -34,6 +30,5 @@ func main() {
 	util.Logging   = logLevel
 	util.OutputDir = outputDir
 	//===================================================
-
 
 }
