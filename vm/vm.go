@@ -9,11 +9,9 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"regexp"
-	"runtime"
+	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/raynaluzier/vsphere-go-sdk/common"
 )
@@ -64,14 +62,14 @@ func SetOvfFileList(sourcePath string) ([]string, error) {
 
 	if len(fileList) == 0 {
 		err := errors.New("No file found called: " + fileName + " in source directory: " + sourcePathOnly)
-		return fileList, err 
+		return fileList, err
 	}
-    return fileList, nil
+	return fileList, nil
 }
 
 func SetPathsFromDownloadUri(outputDir, downloadUri string) (string, string, string) {
 	common.LogTxtHandler().Info(">>>>>>> Setting Source and Target Paths for Conversion.....")
-	// Takes output directory and download URI, parses the image name from the download URI and determines 
+	// Takes output directory and download URI, parses the image name from the download URI and determines
 	// the image file type, source path, and target path that will be used with the image conversion process, if needed
 
 	// 'downloadUri' is the Artifactory path where the image files were downloaded from; this is used to determine the fileName, imageName, and source file type
@@ -83,17 +81,17 @@ func SetPathsFromDownloadUri(outputDir, downloadUri string) (string, string, str
 
 	//     NOTE:  The conversion tool automatically creates a directory based on the image name that it places the files into, so we don't need to include
 	//            an image name-based folder in our target path.
-	//            
+	//
 	// 'fileType' is pulled from file name (ext without ".")
 	var sourcePath, targetPath string
-	outputDir  = common.CheckAddSlashToPath(outputDir)
-	fileName  := common.ParseUriForFilename(downloadUri)
+	outputDir = common.CheckAddSlashToPath(outputDir)
+	fileName := common.ParseUriForFilename(downloadUri)
 	imageName := common.ParseFilenameForImageName(fileName)
-	fileType  := common.GetFileType(fileName)
+	fileType := common.GetFileType(fileName)
 	isWinPath := common.CheckPathType(outputDir)
 	if isWinPath == true {
-		sourcePath = outputDir + imageName + "\\" + fileName  //E:\\Lab\\win2022\\win2022.ova
-	} else  {
+		sourcePath = outputDir + imageName + "\\" + fileName //E:\\Lab\\win2022\\win2022.ova
+	} else {
 		sourcePath = outputDir + imageName + "/" + fileName
 	}
 
@@ -103,11 +101,11 @@ func SetPathsFromDownloadUri(outputDir, downloadUri string) (string, string, str
 	common.LogTxtHandler().Debug("Source Path for Conversion: " + sourcePath)
 
 	if fileType == "vmtx" {
-		pathNoExt := strings.TrimSuffix(sourcePath, "vmtx")		// E:\\Lab\\win2022\\win2022.ova returns: E:\\Lab\\win2022\\win2022.  // was fileName
+		pathNoExt := strings.TrimSuffix(sourcePath, "vmtx") // E:\\Lab\\win2022\\win2022.ova returns: E:\\Lab\\win2022\\win2022.  // was fileName
 		// targetPath used in rename
-		targetPath = pathNoExt + "vmx"                          // returns: E:\\Lab\\win2022\\win2022.vmx  // was: outputDir + imageName + fileNoExt
-	} else {  // ova or ovf...
-		targetPath = outputDir									// E:\\Lab --> ovftool will dump files to:  E:\\Lab\\win2022\\[win2022 VMX files]
+		targetPath = pathNoExt + "vmx" // returns: E:\\Lab\\win2022\\win2022.vmx  // was: outputDir + imageName + fileNoExt
+	} else { // ova or ovf...
+		targetPath = outputDir // E:\\Lab --> ovftool will dump files to:  E:\\Lab\\win2022\\[win2022 VMX files]
 	}
 	common.LogTxtHandler().Debug("Target Path for Conversion: " + targetPath)
 
@@ -121,82 +119,82 @@ func SetPathNoDownload(sourcePath string) string {
 	isWinPath := common.CheckPathType(sourcePath)
 
 	if isWinPath == true {
-		fileName, _ = common.FileNamePathFromWin(sourcePath)		// Ex: E:\\Lab\\win22\\win22.ova, returns: win22.ova
-		fileType  = common.GetFileType(fileName)					// Ex: win22.ova, returns: ova
-		imageName = common.ParseFilenameForImageName(fileName)		// returns: win22
-		checkPath = imageName + "\\" + fileName						// returns: win22\\win22.ova
+		fileName, _ = common.FileNamePathFromWin(sourcePath)   // Ex: E:\\Lab\\win22\\win22.ova, returns: win22.ova
+		fileType = common.GetFileType(fileName)                // Ex: win22.ova, returns: ova
+		imageName = common.ParseFilenameForImageName(fileName) // returns: win22
+		checkPath = imageName + "\\" + fileName                // returns: win22\\win22.ova
 
 		common.LogTxtHandler().Debug("Parsed Filename: " + fileName)
 		common.LogTxtHandler().Debug("Parsed Image Name: " + imageName)
 		common.LogTxtHandler().Debug("Parsed Image File Type: " + fileType)
 		common.LogTxtHandler().Debug("Image Path Being Checked For: " + checkPath)
 
-		if strings.Contains(sourcePath, checkPath) {		              //if 'E:\\Lab\\win22\\win22.ova' contains 'win22\\win22.ova'....
+		if strings.Contains(sourcePath, checkPath) { //if 'E:\\Lab\\win22\\win22.ova' contains 'win22\\win22.ova'....
 			if fileType == "vmtx" {
-				trimmedPath := strings.TrimSuffix(sourcePath, "vmtx")     // Ex: E:\\Lab\\win22\\win22.vmtx, returns: E:\\Lab\\win22\\win22.
-				targetPath = trimmedPath + "vmx"					      // returns: E:\\Lab\\win22\\win22.vmx
+				trimmedPath := strings.TrimSuffix(sourcePath, "vmtx") // Ex: E:\\Lab\\win22\\win22.vmtx, returns: E:\\Lab\\win22\\win22.
+				targetPath = trimmedPath + "vmx"                      // returns: E:\\Lab\\win22\\win22.vmx
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
-			} else if fileType == "ova" || fileType == "ovf" {  // ova or ovf
-				targetPath = strings.TrimSuffix(sourcePath, checkPath)    // Ex: 'E:\\Lab\\win22\\win22.ova', returns: 'E:\\Lab\\'
+			} else if fileType == "ova" || fileType == "ovf" { // ova or ovf
+				targetPath = strings.TrimSuffix(sourcePath, checkPath) // Ex: 'E:\\Lab\\win22\\win22.ova', returns: 'E:\\Lab\\'
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
-			} else {  // vmx, nothing needs done
+			} else { // vmx, nothing needs done
 				targetPath = sourcePath
 				return targetPath
 			}
 		} else {
 			if fileType == "vmtx" {
-				trimmedPath := strings.TrimSuffix(sourcePath, "vmtx")		// Ex: G:\\this\\path\\somefolder\\somefile.vmtx, returns: G:\\this\\path\\somefolder\\somefile.
-				targetPath = trimmedPath + "vmx"							// returns: G:\\this\\path\\somefolder\\somefile.vmx
+				trimmedPath := strings.TrimSuffix(sourcePath, "vmtx") // Ex: G:\\this\\path\\somefolder\\somefile.vmtx, returns: G:\\this\\path\\somefolder\\somefile.
+				targetPath = trimmedPath + "vmx"                      // returns: G:\\this\\path\\somefolder\\somefile.vmx
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
-			} else if fileType == "ova" || fileType == "ovf" {  // ova or ovf
-				file, _ := common.GetBaseImagePathWin(sourcePath)	    // Ex: G:\\this\\path\\somefolder\\somefile.ovf, returns: somefile.ovf
-				targetPath = strings.TrimSuffix(sourcePath, file)		// returns: G:\\this\\path\\somefolder\\
+			} else if fileType == "ova" || fileType == "ovf" { // ova or ovf
+				file, _ := common.GetBaseImagePathWin(sourcePath) // Ex: G:\\this\\path\\somefolder\\somefile.ovf, returns: somefile.ovf
+				targetPath = strings.TrimSuffix(sourcePath, file) // returns: G:\\this\\path\\somefolder\\
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
-			} else {  // vmx, nothing needs done
+			} else { // vmx, nothing needs done
 				targetPath = sourcePath
 				return targetPath
 			}
 		}
 	} else { // linux path
-		fileName, _ = common.FileNamePathFromLnx(sourcePath)		// Ex: /lab/rhel9/rhel9.ova, returns: rhel9.ova
-		fileType = common.GetFileType(fileName)						// Ex: rhel9.ova, returns: ova
-		imageName = common.ParseFilenameForImageName(fileName)		// returns: rhel9
-		checkPath = imageName + "/" + fileName						// returns: rhel/rhel9.ova
+		fileName, _ = common.FileNamePathFromLnx(sourcePath)   // Ex: /lab/rhel9/rhel9.ova, returns: rhel9.ova
+		fileType = common.GetFileType(fileName)                // Ex: rhel9.ova, returns: ova
+		imageName = common.ParseFilenameForImageName(fileName) // returns: rhel9
+		checkPath = imageName + "/" + fileName                 // returns: rhel/rhel9.ova
 
 		common.LogTxtHandler().Debug("Parsed Filename: " + fileName)
 		common.LogTxtHandler().Debug("Parsed Image Name: " + imageName)
 		common.LogTxtHandler().Debug("Parsed Image File Type: " + fileType)
 		common.LogTxtHandler().Debug("Image Path Being Checked For: " + checkPath)
 
-		if strings.Contains(sourcePath, checkPath) {		                //if '/lab/rhel9/rhel9.ova' contains 'rhel9/rhel9.ova'....
+		if strings.Contains(sourcePath, checkPath) { //if '/lab/rhel9/rhel9.ova' contains 'rhel9/rhel9.ova'....
 			if fileType == "vmtx" {
-				trimmedPath := strings.TrimSuffix(sourcePath, "vmtx")		// Ex: /lab/rhel9/rhel9.vmtx, returns: /lab/rhel9/rhel9.
-				targetPath = trimmedPath + "vmx"					        // returns: /lab/rhel9/rhel9.vmx
+				trimmedPath := strings.TrimSuffix(sourcePath, "vmtx") // Ex: /lab/rhel9/rhel9.vmtx, returns: /lab/rhel9/rhel9.
+				targetPath = trimmedPath + "vmx"                      // returns: /lab/rhel9/rhel9.vmx
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
-			} else if fileType == "ova" || fileType == "ovf" {	// ova or ovf
-				targetPath = strings.TrimSuffix(sourcePath, checkPath)	    // Ex: '/lab/rhel9/rhel9.ova', returns: '/lab/'
+			} else if fileType == "ova" || fileType == "ovf" { // ova or ovf
+				targetPath = strings.TrimSuffix(sourcePath, checkPath) // Ex: '/lab/rhel9/rhel9.ova', returns: '/lab/'
 				return targetPath
-			} else {  // vmx, nothing needs done
+			} else { // vmx, nothing needs done
 				targetPath = sourcePath
 				return targetPath
 			}
-		} else {  // if some other path was used							
+		} else { // if some other path was used
 			if fileType == "vmtx" {
-				trimmedPath := strings.TrimSuffix(sourcePath, "vmtx")		// Ex: /this/path/somefolder/somefile.vmtx, returns: /this/path/somefolder/somefile.
-				targetPath = trimmedPath + "vmx"							// returns: /this/path/somefolder/somefile.vmx
+				trimmedPath := strings.TrimSuffix(sourcePath, "vmtx") // Ex: /this/path/somefolder/somefile.vmtx, returns: /this/path/somefolder/somefile.
+				targetPath = trimmedPath + "vmx"                      // returns: /this/path/somefolder/somefile.vmx
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
-			} else if fileType == "ova" || fileType == "ovf" {  // ova or ovf
-				file, _ := common.GetBaseImagePathLnx(sourcePath)	    // Ex: /this/path/somefolder/somefile.ovf, returns: somefile.ovf
-				targetPath = strings.TrimSuffix(sourcePath, file)		// returns: /this/path/somefolder/
+			} else if fileType == "ova" || fileType == "ovf" { // ova or ovf
+				file, _ := common.GetBaseImagePathLnx(sourcePath) // Ex: /this/path/somefolder/somefile.ovf, returns: somefile.ovf
+				targetPath = strings.TrimSuffix(sourcePath, file) // returns: /this/path/somefolder/
 				common.LogTxtHandler().Debug("Target Path: " + targetPath)
 				return targetPath
-			} else {  // vmx, nothing needs done
+			} else { // vmx, nothing needs done
 				targetPath = sourcePath
 				return targetPath
 			}
@@ -232,21 +230,21 @@ func ConvertImageByType(fileType, sourcePath, targetPath string) string {
 func SetVmPathName(path, dsName string) string {
 	// 'path' is the full file path to the image file being imported to vCenter
 	var vmPathName string
-	isWinPath := common.CheckPathType(path)			     // E:\\labimage\\labimage.ova --> true
-	ext := common.GetFileType(path)               // extension without leading '.', example 'ova'
+	isWinPath := common.CheckPathType(path) // E:\\labimage\\labimage.ova --> true
+	ext := common.GetFileType(path)         // extension without leading '.', example 'ova'
 
 	if isWinPath == true {
-		noLetterPath := common.TrimDriveLetter(path)	// returns: labimage\\labimage.ova	
-		path = common.SwapSlashes(noLetterPath)		    // returns: labimage/labimage.ova
+		noLetterPath := common.TrimDriveLetter(path) // returns: labimage\\labimage.ova
+		path = common.SwapSlashes(noLetterPath)      // returns: labimage/labimage.ova
 	} else {
-		path = strings.TrimPrefix(path, "/")			// trim leading slash for linux
+		path = strings.TrimPrefix(path, "/") // trim leading slash for linux
 	}
 
 	if ext == "ova" || ext == "ovf" || ext == "vmtx" {
-		path = strings.TrimSuffix(path, ext)  	  // returns:  labimage/labimage.
-		vmPathName = "[" + dsName + "] " + path + "vmx"  // returns:  [datastore] labimage/labimage.vmx
+		path = strings.TrimSuffix(path, ext)            // returns:  labimage/labimage.
+		vmPathName = "[" + dsName + "] " + path + "vmx" // returns:  [datastore] labimage/labimage.vmx
 	} else {
-		vmPathName = "[" + dsName + "] " + path          // returns:  [datastore] labimage/labimage.vmx
+		vmPathName = "[" + dsName + "] " + path // returns:  [datastore] labimage/labimage.vmx
 	}
 	common.LogTxtHandler().Info("vmPathName is set to: " + vmPathName)
 	return vmPathName
@@ -257,8 +255,8 @@ func RegisterVm(token, vcServer, dcName, vmPathName, imageName, folderId, resPoo
 	requestPath := "https://" + vcServer + "/api/vcenter/vm?action=register"
 
 	type Placement struct {
-		Folder       string `json:"folder"`         // required
-		ResourcePool string `json:"resource_pool"`	// required
+		Folder       string `json:"folder"`        // required
+		ResourcePool string `json:"resource_pool"` // required
 	}
 
 	type Payload struct {
@@ -270,11 +268,11 @@ func RegisterVm(token, vcServer, dcName, vmPathName, imageName, folderId, resPoo
 	// if trying to use vmtx, get error "A specified parameter was not correct: path"
 	// if trying to use vmdk, import is successful, but there's no network, etc.
 	// 'vmPathName' needs to match the resulting target path of the image file after the image conversion
-	data := Payload{ 
+	data := Payload{
 		DatastorePath: vmPathName,
-		Name: imageName,
+		Name:          imageName,
 		Placement: Placement{
-			Folder: folderId,
+			Folder:       folderId,
 			ResourcePool: resPoolId,
 		},
 	}
@@ -282,44 +280,42 @@ func RegisterVm(token, vcServer, dcName, vmPathName, imageName, folderId, resPoo
 	payloadBytes, err := json.Marshal(data)
 
 	if err != nil {
-		strErr := fmt.Sprintf("%v\n", err)
-		common.LogTxtHandler().Error("Error: Unable to marshal json data - " + strErr)
+		common.LogTxtHandler().Error("Error: Unable to marshal json data - " + err.Error())
+		return "Failed"
 	}
 	body := bytes.NewReader(payloadBytes)
 
 	req, err := http.NewRequest(http.MethodPost, requestPath, body)
 	if err != nil {
-		strErr := fmt.Sprintf("%v\n", err)
-		common.LogTxtHandler().Error("Error: Error making HTTP POST request - " + strErr)
+		common.LogTxtHandler().Error("Error: Error making HTTP POST request - " + err.Error())
+		return "Failed"
 	}
 	req.Header.Set("Content-Type", "application/json")
 	newToken := common.TrimQuotes(token) // Required or auth will fail
 	req.Header.Set("vmware-api-session-id", newToken)
-	
+
 	//v1 := req.Header.Get("vmware-api-session-id")
 	//fmt.Println(v1)
 
 	defaultTransport := http.DefaultTransport.(*http.Transport)
 	customTransport := &http.Transport{
-		Proxy:					defaultTransport.Proxy,
-		DialContext:			defaultTransport.DialContext,
-		MaxIdleConns:   		defaultTransport.MaxIdleConns,
-		IdleConnTimeout: 		defaultTransport.IdleConnTimeout,
-		ExpectContinueTimeout: 	defaultTransport.ExpectContinueTimeout,
-		TLSHandshakeTimeout: 	defaultTransport.TLSHandshakeTimeout,
-		TLSClientConfig: 		&tls.Config{InsecureSkipVerify: true},
+		Proxy:                 defaultTransport.Proxy,
+		DialContext:           defaultTransport.DialContext,
+		MaxIdleConns:          defaultTransport.MaxIdleConns,
+		IdleConnTimeout:       defaultTransport.IdleConnTimeout,
+		ExpectContinueTimeout: defaultTransport.ExpectContinueTimeout,
+		TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout,
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: common.InsecureSkipTLSVerification()},
 	}
 
 	client := &http.Client{Transport: customTransport}
 	resp, err := client.Do(req)
-	strResp := fmt.Sprintf("%v\n", resp)
-	common.LogTxtHandler().Debug(strResp)
-
 	if err != nil {
-		strErr := fmt.Sprintf("%v\n", err)
-		common.LogTxtHandler().Error("Error registering VMX with vCenter - " + strErr)
+		common.LogTxtHandler().Error("Error registering VMX with vCenter - " + err.Error())
+		return "Failed"
 	}
 	defer resp.Body.Close()
+	common.LogTxtHandler().Debug(fmt.Sprintf("vCenter registration response status: %d", resp.StatusCode))
 
 	if resp.StatusCode == 200 {
 		statusCode = "200"
@@ -332,102 +328,45 @@ func RegisterVm(token, vcServer, dcName, vmPathName, imageName, folderId, resPoo
 }
 
 // These OVF/OVA conversion functions require the OVFTool be installed
-	// Converts OVF/OVA to VMX
-	// For Windows: 'cmd' and '/c' are not included in the commands, this will fail
-	// Input can be local or URL
-	// Ensure local paths are escaped properly (ex: C:\\lab\\file.vmx)
+// Converts OVF/OVA to VMX
+// For Windows: 'cmd' and '/c' are not included in the commands, this will fail
+// Input can be local or URL
+// Ensure local paths are escaped properly (ex: C:\\lab\\file.vmx)
 func ConvertOvfaToVmx(inputPath, outputPath string) string {
-	var cmd *exec.Cmd
-	var ovaMatched, ovfMatched bool
-
-	inputPath = strings.ToLower(inputPath)                   // Ex: e:\\lab-servs\\image1234.ova
-	outputPath = strings.ToLower(outputPath)				 // Ex: e:\\lab-servs\\image1234.vmx
-	
-	// Ensure input is either an OVA or OVF file
-	ovfMatched, err := regexp.MatchString("ovf", inputPath)
-	if ovfMatched == false {
-		ovaMatched, err = regexp.MatchString("ova", inputPath)
-		if ovaMatched == false {
-			common.LogTxtHandler().Error("Error: Input is neither an OVA or OVF file.")
-			common.LogTxtHandler().Error("Please provide the full file path to the OVA or OVF that's to be converted.") 
-		}
+	extension := strings.ToLower(filepath.Ext(inputPath))
+	if extension != ".ova" && extension != ".ovf" {
+		common.LogTxtHandler().Error("Input must be an OVA or OVF file.")
+		return "Failed"
 	}
-	if err != nil {
-		common.LogTxtHandler().Error("Unable to search for OVA/OVF string.")
-	}
-	
-	ovfCmd := "ovftool -tt=vmx " + inputPath + " " + outputPath								// Ex:  ovftool e:\\lab-servs\\image1234.ova e:\\lab-servs\\image1234.vmx
-	fmt.Println("OVF CMD: " + ovfCmd)
 
 	common.LogTxtHandler().Info("Beginning conversion process... This could take a while.")
-	switch runtime.GOOS{
-	case "windows":
-		fmt.Println("Running Windows shell...")
-		cmd = exec.Command("cmd", "/c", ovfCmd)
-	default: // mac & linux
-		fmt.Println("Running Linux shell...")
-		cmd = exec.Command("bash", "-c", ovfCmd)
-	}
-
+	cmd := exec.Command("ovftool", "-tt=vmx", inputPath, outputPath)
 	cmd.Stdout = os.Stdout
-
+	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		common.LogTxtHandler().Error("Could not run the exec shell command.")
-		common.LogTxtHandler().Error("Is the OVFTool installed on the machine executing this plugin?")
+		common.LogTxtHandler().Error("Could not run OVFTool; verify it is installed and the input paths are valid.")
 		return "Failed"
-	} else {
-		time.Sleep(3 * time.Second)
-		return "Success"
 	}
+	return "Success"
 }
 
 func ConvertVmxToOvfa(inputPath, outputPath string) string {
-	var cmd *exec.Cmd
-	var ovaMatched, ovfMatched, vmxMatched bool
-
-	inputPath = strings.ToLower(inputPath)
-	outputPath = strings.ToLower(inputPath)
-	
-	// Ensure input is a VMX file
-	vmxMatched, err := regexp.MatchString("vmx", inputPath)
-	if vmxMatched == false {
-		fmt.Println("Error: Input does not include a VMX file path.")
-		fmt.Println("Please provide the full file path to the VMX that's to be converted.") 	
-	}
-	if err != nil {
-		fmt.Println("Unable to search for VMX string.")
-	}
-	
-	// Ensure output is either an OVA or OVF file
-	ovfMatched, err = regexp.MatchString("ovf", outputPath)
-	if ovfMatched == false {
-		ovaMatched, err = regexp.MatchString("ova", outputPath)
-		if ovaMatched == false {
-			fmt.Println("Error: Output is neither an OVA or OVF file.")
-			fmt.Println("Please provide the full destination file path to the resulting OVA or OVF file.")
-		}
-	}
-	if err != nil {
-		fmt.Println("Unable to search for OVA/OVF string.")
-	}
-	
-	ovfCmd := "ovftool " + inputPath + " " + outputPath
-
-	fmt.Println("Beginning conversion process... This could take a while.")
-	switch runtime.GOOS{
-	case "windows":
-		cmd = exec.Command("cmd", "/c", ovfCmd)
-	default: // mac & linux
-		cmd = exec.Command("bash", "-c", ovfCmd)
-	}
-
-	cmd.Stdout = os.Stdout
-
-	if err := cmd.Run(); err != nil {
-		fmt.Println("Could not run the exec shell command.") 
-		// if mac or linux, do we need to prefice cmd with "bash"?
+	if strings.ToLower(filepath.Ext(inputPath)) != ".vmx" {
+		common.LogTxtHandler().Error("Input must be a VMX file.")
 		return "Failed"
-	} else {
-		return "Success"
 	}
+	outputExtension := strings.ToLower(filepath.Ext(outputPath))
+	if outputExtension != ".ova" && outputExtension != ".ovf" {
+		common.LogTxtHandler().Error("Output must be an OVA or OVF file.")
+		return "Failed"
+	}
+
+	cmd := exec.Command("ovftool", inputPath, outputPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		common.LogTxtHandler().Error("Could not run OVFTool; verify it is installed and the input paths are valid.")
+		return "Failed"
+	}
+	return "Success"
 }

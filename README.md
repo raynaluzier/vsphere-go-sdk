@@ -12,11 +12,11 @@ To run functions from this module, the following pre-requisites must be met:
 
 3. Go is installed on the system where the functions/plugin will be run: https://go.dev/doc/install.
 
-4. Ensure the `GOPATH` (the local directory to where the Go app is installed) is configured, as well as the environment variable to the path of the Go binary (on Windows, this would typically be `C:\Program Files\Go\bin`, for example).
+4. Ensure the Go binary is available on `PATH`. This module uses Go modules; `GOPATH` configuration is not required.
 
-5. Populating the Global Variables (see: `/util/util.go`): **VcServer**, **VcUser**, **VcPassword**, **OutputDir**, and optionally, **Logging**. This can be done by configuring the `.env` file or statically (only recommended for testing).
+5. Populate the configuration values used by the SDK: **VcServer**, **VcUser**, **VcPassword**, **OutputDir**, and optionally, **Logging**.
 
-Using .env File: Configure the `.env` file with vCenter credentials, vCenter server, and then the Output Directory is used for downloading the image file(s) to ensure they're placed in the desired datastore location. Logging provides an option to change the level of logging to display.
+The SDK does not load `.env` files itself. Load values into the process environment before calling it, then use `os.Getenv` to initialize the SDK configuration. Task functions currently store configuration in package globals; do not run calls using different configurations concurrently.
 
     * `VCENTER_SERVER`   - vCenter Server   --> Ex: VCENTER_SERVER=vc01.domain.com
     * `VCENTER_USER`     - vCenter User     --> Ex: VCENTER_USER=admin@domain.com
@@ -24,7 +24,7 @@ Using .env File: Configure the `.env` file with vCenter credentials, vCenter ser
     * `OUTPUTDIR`        - Output directory on the desired datastore for downloading artifacts --> Ex: OUTPUTDIR=/servs/path/ or H:\servs\path
     * `LOGGING`          - Logging level (INFO, WARN, ERROR, DEBUG); defaults to 'INFO'        --> Ex: LOGGING=DEBUG
 
-Then use `os.Getenv` to set `util.VcServer`, `util.VcUser`, `util.VcPasword`, `util.OutputDir`, and `util.Logging` respectively.
+Set `VSPHERE_INSECURE_SKIP_TLS_VERIFY=true` only when connecting to a vCenter with a self-signed certificate that is not trusted by the host. Certificate verification is enabled by default.
 
 ## About
 This SDK is broken into several packages: `common`, `govmomi`, `vm`, `tasks`, and `util` based on the underlying behavior of the functions. Some functions are specifically related to certain behaviors or package sources so they have been grouped together into functional packages as described below.

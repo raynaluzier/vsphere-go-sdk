@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/raynaluzier/vsphere-go-sdk/util"
@@ -18,48 +19,52 @@ import (
 
 var logLevel slog.Level
 
+func InsecureSkipTLSVerification() bool {
+	value, err := strconv.ParseBool(os.Getenv("VSPHERE_INSECURE_SKIP_TLS_VERIFY"))
+	return err == nil && value
+}
+
 func VcenterAuth(user, pass, server string) string {
 	var token string
-	server = AddHttpsProtocol(server)  // checks for http and adds https:// if missing
+	server = AddHttpsProtocol(server) // checks for http and adds https:// if missing
 	requestPath := server + "/api/session"
 	request, err := http.NewRequest("POST", requestPath, nil)
-	request.SetBasicAuth(user, pass)
-	
 	if err != nil {
-		strErr := fmt.Sprintf("%v\n", err)
-		LogTxtHandler().Error("Error with POST request - " + strErr)
+		LogTxtHandler().Error("Error with POST request: " + err.Error())
+		return ""
 	}
-	
+	request.SetBasicAuth(user, pass)
+
 	defaultTransport := http.DefaultTransport.(*http.Transport)
 	customTransport := &http.Transport{
-		Proxy:					defaultTransport.Proxy,
-		DialContext:			defaultTransport.DialContext,
-		MaxIdleConns:   		defaultTransport.MaxIdleConns,
-		IdleConnTimeout: 		defaultTransport.IdleConnTimeout,
-		ExpectContinueTimeout: 	defaultTransport.ExpectContinueTimeout,
-		TLSHandshakeTimeout: 	defaultTransport.TLSHandshakeTimeout,
-		TLSClientConfig: 		&tls.Config{InsecureSkipVerify: true},
+		Proxy:                 defaultTransport.Proxy,
+		DialContext:           defaultTransport.DialContext,
+		MaxIdleConns:          defaultTransport.MaxIdleConns,
+		IdleConnTimeout:       defaultTransport.IdleConnTimeout,
+		ExpectContinueTimeout: defaultTransport.ExpectContinueTimeout,
+		TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout,
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: InsecureSkipTLSVerification()},
 	}
-	
+
 	client := &http.Client{Transport: customTransport}
 	response, err := client.Do(request)
 	if err != nil {
-		strErr := fmt.Sprintf("%v\n", err)
-		LogTxtHandler().Error("Response error: " + strErr)
+		LogTxtHandler().Error("Response error: " + err.Error())
 		LogTxtHandler().Error("Check the server name/IP provided.")
+		return ""
 	}
-	
+
 	defer response.Body.Close()
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		strErr := fmt.Sprintf("%v\n", err)
-		LogTxtHandler().Error("Error reading response body - " + strErr)
+		LogTxtHandler().Error("Error reading response body: " + err.Error())
+		return ""
 	}
-	
+
 	// if server name contains https, try http
 	respBody := string(body)
 	if strings.Contains(respBody, "Authentication required.") && strings.Contains(server, "https://") {
-		server = AddHttpProtocol(server)  // Replaces https with http first, retries auth
+		server = AddHttpProtocol(server) // Replaces https with http first, retries auth
 		token = VcenterAuth(user, pass, server)
 		return token
 	} else {
@@ -144,63 +149,55 @@ func TrimUrlProtocol(serverUrl string) string {
 }
 
 func TrimQuotes(s string) string {
-    if len(s) >= 2 {
-        if s[0] == '"' && s[len(s)-1] == '"' {
-            return s[1 : len(s)-1]
-        }
-    }
-    return s
+	if len(s) >= 2 {
+		if s[0] == '"' && s[len(s)-1] == '"' {
+			return s[1 : len(s)-1]
+		}
+	}
+	return s
 }
 
 func RenameFile(oldFilePath, newFilePath string) string {
 	// Full path to files
 	err := os.Rename(oldFilePath, newFilePath)
-    if err != nil {
+	if err != nil {
 		strErr := fmt.Sprintf("%v\n", err)
-        LogTxtHandler().Error("Error renaming file - " + strErr)
+		LogTxtHandler().Error("Error renaming file - " + strErr)
 		return "Failed"
-    } else {
+	} else {
 		return "Success"
 	}
 }
 
 func CheckDirAndCreate(dirPath string) string {
-	_, err := os.Stat(dirPath)
-
-    if os.IsNotExist(err) {
-        os.Mkdir(dirPath, os.ModePerm)
-
-		// Make sure the directory was created successfully
-        _, err = os.Stat(dirPath)
-        if err != nil {
-            log.Fatalf("Failed to create directory: %v", err)
-        } else {
-            log.Println("Directory created successfully!")
-        }
-    } else {
-        log.Println("Directory already exists.")
-    }
-    return "Completed directory check"
+	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
+		LogTxtHandler().Error("Failed to create directory: " + err.Error())
+		return "Failed directory check"
+	}
+	log.Println("Directory exists.")
+	return "Completed directory check"
 }
 
 func MoveFiles(fileList []string, sourceDir, destDir string) error {
 	// Check for the target dir, if it doesn't exist, create it
 	result := CheckDirAndCreate(destDir)
-    log.Println(result)
+	if result != "Completed directory check" {
+		return fmt.Errorf("create destination directory %q", destDir)
+	}
 
-    for _, file := range fileList {
-        fileName := filepath.Base(file)
+	for _, file := range fileList {
+		fileName := filepath.Base(file)
 		// Set dest and source paths with filename
-        destPath := filepath.Join(destDir, fileName)
-        sourcePath := filepath.Join(sourceDir, fileName)      
+		destPath := filepath.Join(destDir, fileName)
+		sourcePath := filepath.Join(sourceDir, fileName)
 
 		// Move the file
-        err := os.Rename(sourcePath, destPath)
-        if err != nil {
-            return fmt.Errorf("Failed to move file %s: %w", file, err)
-        }
-    }
-    return nil
+		err := os.Rename(sourcePath, destPath)
+		if err != nil {
+			return fmt.Errorf("Failed to move file %s: %w", file, err)
+		}
+	}
+	return nil
 }
 
 func GetFileType(filePath string) string {
@@ -246,30 +243,30 @@ func CheckPathType(path string) bool {
 }
 
 func FileNamePathFromWin(path string) (string, string) {
-	segments := strings.Split(path, "\\")	    // Split file path into segments
-	fileName := segments[len(segments)-1]	     // Determine filename from path
-	filePath := path[:len(path)-len(fileName)]   // Determine just path without filename
+	segments := strings.Split(path, "\\")      // Split file path into segments
+	fileName := segments[len(segments)-1]      // Determine filename from path
+	filePath := path[:len(path)-len(fileName)] // Determine just path without filename
 	return fileName, filePath
 }
 
 func FileNamePathFromLnx(path string) (string, string) {
-	segments := strings.Split(path, "/")	    // Split file path into segments
-	fileName := segments[len(segments)-1]	     // Determine filename from path
-	filePath := path[:len(path)-len(fileName)]   // Determine just path without filename
+	segments := strings.Split(path, "/")       // Split file path into segments
+	fileName := segments[len(segments)-1]      // Determine filename from path
+	filePath := path[:len(path)-len(fileName)] // Determine just path without filename
 	return fileName, filePath
 }
 
 func GetBaseImagePathWin(sourcePath string) (string, string) {
-	segments := strings.Split(sourcePath, "\\")	    // Split file path into segments
-	fileName := segments[len(segments)-1]	    // Determine filename from path (no begin or end slash)
-	parentDir := segments[len(segments)-2]		// Determine parent directory of file (no begin or end slash)
+	segments := strings.Split(sourcePath, "\\") // Split file path into segments
+	fileName := segments[len(segments)-1]       // Determine filename from path (no begin or end slash)
+	parentDir := segments[len(segments)-2]      // Determine parent directory of file (no begin or end slash)
 	return fileName, parentDir
 }
 
 func GetBaseImagePathLnx(sourcePath string) (string, string) {
-	segments := strings.Split(sourcePath, "/")	    // Split file path into segments
-	fileName := segments[len(segments)-1]	    // Determine filename from path (no begin or end slash)
-	parentDir := segments[len(segments)-2]		// Determine parent directory of file (no begin or end slash)
+	segments := strings.Split(sourcePath, "/") // Split file path into segments
+	fileName := segments[len(segments)-1]      // Determine filename from path (no begin or end slash)
+	parentDir := segments[len(segments)-2]     // Determine parent directory of file (no begin or end slash)
 	return fileName, parentDir
 }
 
@@ -286,7 +283,7 @@ func CheckAddSlashToPath(path string) string {
 			path = path + "\\"
 			return path
 		}
-	} else {  // Unix Path
+	} else { // Unix Path
 		if lastChar == "/" {
 			LogTxtHandler().Debug("Path: '" + path + "' is formatted properly")
 			return path
@@ -340,7 +337,7 @@ func LogTxtHandler() *slog.Logger {
 	opts := &slog.HandlerOptions{
 		Level: slog.Level(loggingLevel),
 	}
-	handler   := slog.NewTextHandler(os.Stdout, opts)
+	handler := slog.NewTextHandler(os.Stdout, opts)
 	txtLogger := slog.New(handler)
 	return txtLogger
 }
